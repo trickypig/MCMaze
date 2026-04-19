@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "package": "node scripts-dev/package.mjs",
+    "local-deploy": "node scripts-dev/local-deploy.mjs",
     "link": "powershell -ExecutionPolicy Bypass -File scripts-dev/link-packs.ps1"
   },
   "devDependencies": {
