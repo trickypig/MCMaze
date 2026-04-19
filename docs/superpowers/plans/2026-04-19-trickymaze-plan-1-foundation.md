@@ -344,12 +344,12 @@ git commit -m "chore: add pack symlink script for dev iteration"
 ```ts
 import { world } from "@minecraft/server";
 
-world.afterEvents.worldInitialize?.subscribe(() => {
-  console.warn("[TrickyMaze] Script loaded.");
+world.afterEvents.worldLoad.subscribe(() => {
+  console.warn("[TrickyMaze] World loaded.");
 });
 
-// Fallback sanity log for versions where worldInitialize fires before subscribe.
-console.warn("[TrickyMaze] main.ts imported.");
+// Top-level log — fires at module import, before worldLoad.
+console.warn("[TrickyMaze] Module imported (pre-world).");
 ```
 
 - [ ] **Step 2: Build**

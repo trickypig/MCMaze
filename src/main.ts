@@ -1,10 +1,8 @@
 import { world } from "@minecraft/server";
 
-// worldInitialize is present in older API versions; guard with optional chaining.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-(world.afterEvents as any).worldInitialize?.subscribe(() => {
-  console.warn("[TrickyMaze] Script loaded.");
+world.afterEvents.worldLoad.subscribe(() => {
+  console.warn("[TrickyMaze] World loaded.");
 });
 
-// Fallback sanity log for versions where worldInitialize fires before subscribe.
-console.warn("[TrickyMaze] main.ts imported.");
+// Top-level log — fires at module import, before worldLoad.
+console.warn("[TrickyMaze] Module imported (pre-world).");
