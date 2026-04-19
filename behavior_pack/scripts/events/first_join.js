@@ -6,6 +6,7 @@ import { commitState } from "../main";
 export const ANCHOR = { x: 10000, y: -50, z: 10000 };
 const TICKING_AREA_NAME = "trickymaze_anchor";
 const FLOOR_Y_SPAN = 150; // Covers prison + ~20 stacked floors.
+export let prisonSpec = null;
 export function handleFirstJoin(state) {
     if (state.phase !== RunPhase.Idle)
         return;
@@ -23,6 +24,7 @@ export function handleFirstJoin(state) {
     dim.runCommand(`tickingarea add ${ANCHOR.x - 10} ${ANCHOR.y - FLOOR_Y_SPAN} ${ANCHOR.z - 10} ` +
         `${ANCHOR.x + 140} ${ANCHOR.y + 10} ${ANCHOR.z + 140} ${TICKING_AREA_NAME} true`);
     const prison = buildPrison(ANCHOR);
+    prisonSpec = prison;
     applyOps(prison.operations);
     state.enterPrison();
     commitState();

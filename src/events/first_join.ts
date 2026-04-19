@@ -1,6 +1,6 @@
 import { world, GameMode, system } from "@minecraft/server";
 import type { Vec3 } from "../generation/floor";
-import { buildPrison } from "../generation/prison";
+import { buildPrison, type PrisonSpec } from "../generation/prison";
 import { applyOps } from "../generation/world_writer";
 import { RunPhase, RunState } from "../state/run";
 import { commitState } from "../main";
@@ -8,6 +8,8 @@ import { commitState } from "../main";
 export const ANCHOR: Vec3 = { x: 10000, y: -50, z: 10000 };
 const TICKING_AREA_NAME = "trickymaze_anchor";
 const FLOOR_Y_SPAN = 150; // Covers prison + ~20 stacked floors.
+
+export let prisonSpec: PrisonSpec | null = null;
 
 export function handleFirstJoin(state: RunState): void {
   if (state.phase !== RunPhase.Idle) return;
@@ -30,6 +32,7 @@ export function handleFirstJoin(state: RunState): void {
   );
 
   const prison = buildPrison(ANCHOR);
+  prisonSpec = prison;
   applyOps(prison.operations);
   state.enterPrison();
   commitState();
