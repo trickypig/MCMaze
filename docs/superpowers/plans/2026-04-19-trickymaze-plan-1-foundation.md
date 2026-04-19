@@ -344,12 +344,12 @@ git commit -m "chore: add pack symlink script for dev iteration"
 ```ts
 import { world } from "@minecraft/server";
 
-world.afterEvents.worldInitialize?.subscribe(() => {
-  console.warn("[TrickyMaze] Script loaded.");
+world.afterEvents.worldLoad.subscribe(() => {
+  console.warn("[TrickyMaze] World loaded.");
 });
 
-// Fallback sanity log for versions where worldInitialize fires before subscribe.
-console.warn("[TrickyMaze] main.ts imported.");
+// Top-level log — fires at module import, before worldLoad.
+console.warn("[TrickyMaze] Module imported (pre-world).");
 ```
 
 - [ ] **Step 2: Build**
@@ -1222,7 +1222,7 @@ This is the thin integration layer that turns pure `FillOp`s into actual Minecra
 - [ ] **Step 1: Create `src/generation/world_writer.ts`**
 
 ```ts
-import { world, BlockPermutation } from "@minecraft/server";
+import { world, BlockPermutation, BlockVolume } from "@minecraft/server";
 import type { FillOp, Vec3 } from "./floor";
 
 const MAX_VOLUME = 32_768;
@@ -1273,7 +1273,7 @@ function fillOnce(
 ): void {
   try {
     const perm = BlockPermutation.resolve(blockId);
-    dim.fillBlocks(min, max, perm);
+    dim.fillBlocks(new BlockVolume(min, max), perm);
   } catch (e) {
     console.warn(
       `[TrickyMaze] fillBlocks failed at (${min.x},${min.y},${min.z})->(${max.x},${max.y},${max.z}) with ${blockId}: ${String(e)}`,
@@ -1417,13 +1417,13 @@ export function handleFirstJoin(state: RunState): void {
   commitState();
 
   // Disable natural mob spawning world-wide for this session (§9.1).
-  dim.runCommand("gamerule dommobspawning false");
+  dim.runCommand("gamerule domobspawning false");
 
   // Teleport all connected players into the prison, adventure mode, give bread.
   system.runTimeout(() => {
     for (const p of world.getAllPlayers()) {
       p.teleport(prison.spawnPos, { dimension: dim });
-      p.setGameMode(GameMode.adventure);
+      p.setGameMode(GameMode.Adventure);
       const inv = p.getComponent("minecraft:inventory")?.container;
       inv?.clearAll();
       p.runCommand("give @s bread 8");
@@ -1702,7 +1702,7 @@ Expected: all modules compile.
 
 - [ ] **Step 6: Manual QA — floor generation**
 
-1. Re-enter the prison world (remove previous world, make a new one so `worldInitialize` fires cleanly).
+1. Re-enter the prison world (remove previous world, make a new one so `worldLoad` fires cleanly).
 2. Step on the pressure plate.
 3. Within a couple of seconds you should be teleported to a cell in a stone-brick maze at `Y ≈ -56`.
 4. Explore — verify you can walk through corridors and hit dead-end walls.
@@ -1745,27 +1745,29 @@ export function registerDeathHandlers(state: RunState): void {
 
     console.warn(`[TrickyMaze] Player died: ${entity.name}`);
     state.markDead(entity.id);
+    const lastPlayerDied = state.aliveCount() === 0;
     commitState();
 
     // Immediately set them to spectator (the death screen will briefly show).
     system.runTimeout(() => {
       try {
-        entity.setGameMode(GameMode.spectator);
+        entity.setGameMode(GameMode.Spectator);
       } catch (e) {
         console.warn(`[TrickyMaze] Failed to set spectator: ${String(e)}`);
       }
     }, 10);
 
-    if (state.phase === RunPhase.Resetting) {
+    if (lastPlayerDied) {
       console.warn("[TrickyMaze] Last player died — starting reset countdown.");
       startResetCountdown(state);
     }
   });
 
   world.afterEvents.playerLeave?.subscribe((ev) => {
+    const wasFloorActive = state.phase === RunPhase.FloorActive;
     state.markDead(ev.playerId);
     commitState();
-    if (state.phase === RunPhase.Resetting) {
+    if (wasFloorActive && state.aliveCount() === 0) {
       startResetCountdown(state);
     }
   });
@@ -1920,7 +1922,7 @@ Append to `src/main.ts`:
 ```ts
 system.afterEvents.scriptEventReceive.subscribe((ev) => {
   if (ev.id === "trickymaze:shutdown") {
-    world.getDimension("overworld").runCommand("gamerule dommobspawning true");
+    world.getDimension("overworld").runCommand("gamerule domobspawning true");
     world.sendMessage("§7TrickyMaze shutdown: mob spawning restored.");
     console.warn("[TrickyMaze] Shutdown event received; gamerule restored.");
   }
@@ -1936,7 +1938,7 @@ Run: `npm run build`
 - [ ] **Step 3: Manual QA**
 
 In a running world: `/scriptevent trickymaze:shutdown`
-Expected: chat prints "TrickyMaze shutdown: mob spawning restored."; `/gamerule dommobspawning` reports `true`.
+Expected: chat prints "TrickyMaze shutdown: mob spawning restored."; `/gamerule domobspawning` reports `true`.
 
 - [ ] **Step 4: Commit**
 
@@ -2045,7 +2047,7 @@ Beta APIs OFF, Content Log GUI ON.
 - [ ] Within 1–2s, player is teleported into a 5×5 stone-brick room.
 - [ ] Gamemode is Adventure (attempt to break a block — should fail).
 - [ ] Inventory contains exactly 8 bread.
-- [ ] `/gamerule dommobspawning` reports `false`.
+- [ ] `/gamerule domobspawning` reports `false`.
 
 ## Scenario 2 — Solo floor entry
 - [ ] Walk onto the heavy weighted pressure plate.
@@ -2078,7 +2080,7 @@ Beta APIs OFF, Content Log GUI ON.
 ## Scenario 6 — Shutdown command
 - [ ] Run `/scriptevent trickymaze:shutdown`.
 - [ ] Chat shows restoration message.
-- [ ] `/gamerule dommobspawning` reports `true`.
+- [ ] `/gamerule domobspawning` reports `true`.
 
 ## Known limitations (Plan 1)
 - Mid-run joins are ignored (tolerated, logged).
