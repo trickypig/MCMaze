@@ -1222,7 +1222,7 @@ This is the thin integration layer that turns pure `FillOp`s into actual Minecra
 - [ ] **Step 1: Create `src/generation/world_writer.ts`**
 
 ```ts
-import { world, BlockPermutation } from "@minecraft/server";
+import { world, BlockPermutation, BlockVolume } from "@minecraft/server";
 import type { FillOp, Vec3 } from "./floor";
 
 const MAX_VOLUME = 32_768;
@@ -1273,7 +1273,7 @@ function fillOnce(
 ): void {
   try {
     const perm = BlockPermutation.resolve(blockId);
-    dim.fillBlocks(min, max, perm);
+    dim.fillBlocks(new BlockVolume(min, max), perm);
   } catch (e) {
     console.warn(
       `[TrickyMaze] fillBlocks failed at (${min.x},${min.y},${min.z})->(${max.x},${max.y},${max.z}) with ${blockId}: ${String(e)}`,
