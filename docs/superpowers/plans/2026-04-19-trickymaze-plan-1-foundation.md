@@ -1417,7 +1417,7 @@ export function handleFirstJoin(state: RunState): void {
   commitState();
 
   // Disable natural mob spawning world-wide for this session (§9.1).
-  dim.runCommand("gamerule dommobspawning false");
+  dim.runCommand("gamerule domobspawning false");
 
   // Teleport all connected players into the prison, adventure mode, give bread.
   system.runTimeout(() => {
@@ -1922,7 +1922,7 @@ Append to `src/main.ts`:
 ```ts
 system.afterEvents.scriptEventReceive.subscribe((ev) => {
   if (ev.id === "trickymaze:shutdown") {
-    world.getDimension("overworld").runCommand("gamerule dommobspawning true");
+    world.getDimension("overworld").runCommand("gamerule domobspawning true");
     world.sendMessage("§7TrickyMaze shutdown: mob spawning restored.");
     console.warn("[TrickyMaze] Shutdown event received; gamerule restored.");
   }
@@ -1938,7 +1938,7 @@ Run: `npm run build`
 - [ ] **Step 3: Manual QA**
 
 In a running world: `/scriptevent trickymaze:shutdown`
-Expected: chat prints "TrickyMaze shutdown: mob spawning restored."; `/gamerule dommobspawning` reports `true`.
+Expected: chat prints "TrickyMaze shutdown: mob spawning restored."; `/gamerule domobspawning` reports `true`.
 
 - [ ] **Step 4: Commit**
 
@@ -2047,7 +2047,7 @@ Beta APIs OFF, Content Log GUI ON.
 - [ ] Within 1–2s, player is teleported into a 5×5 stone-brick room.
 - [ ] Gamemode is Adventure (attempt to break a block — should fail).
 - [ ] Inventory contains exactly 8 bread.
-- [ ] `/gamerule dommobspawning` reports `false`.
+- [ ] `/gamerule domobspawning` reports `false`.
 
 ## Scenario 2 — Solo floor entry
 - [ ] Walk onto the heavy weighted pressure plate.
@@ -2080,7 +2080,7 @@ Beta APIs OFF, Content Log GUI ON.
 ## Scenario 6 — Shutdown command
 - [ ] Run `/scriptevent trickymaze:shutdown`.
 - [ ] Chat shows restoration message.
-- [ ] `/gamerule dommobspawning` reports `true`.
+- [ ] `/gamerule domobspawning` reports `true`.
 
 ## Known limitations (Plan 1)
 - Mid-run joins are ignored (tolerated, logged).

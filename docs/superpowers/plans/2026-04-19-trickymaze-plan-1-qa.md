@@ -9,7 +9,7 @@ Beta APIs OFF, Content Log GUI ON.
 - [ ] Within 1–2s, player is teleported into a 5×5 stone-brick room.
 - [ ] Gamemode is Adventure (attempt to break a block — should fail).
 - [ ] Inventory contains exactly 8 bread.
-- [ ] `/gamerule dommobspawning` reports `false`.
+- [ ] `/gamerule domobspawning` reports `false`.
 
 ## Scenario 2 — Solo floor entry
 - [ ] Walk onto the heavy weighted pressure plate.
@@ -42,7 +42,7 @@ Beta APIs OFF, Content Log GUI ON.
 ## Scenario 6 — Shutdown command
 - [ ] Run `/scriptevent trickymaze:shutdown`.
 - [ ] Chat shows restoration message.
-- [ ] `/gamerule dommobspawning` reports `true`.
+- [ ] `/gamerule domobspawning` reports `true`.
 
 ## Known limitations (Plan 1)
 - Mid-run joins are ignored (tolerated, logged).

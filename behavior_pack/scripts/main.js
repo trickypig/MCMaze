@@ -43,7 +43,7 @@ system.run(() => {
 });
 system.afterEvents.scriptEventReceive.subscribe((ev) => {
     if (ev.id === "trickymaze:shutdown") {
-        world.getDimension("overworld").runCommand("gamerule dommobspawning true");
+        world.getDimension("overworld").runCommand("gamerule domobspawning true");
         world.sendMessage("§7TrickyMaze shutdown: mob spawning restored.");
         console.warn("[TrickyMaze] Shutdown event received; gamerule restored.");
     }
