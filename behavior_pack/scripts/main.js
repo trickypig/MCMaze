@@ -1,6 +1,14 @@
-import { world } from "@minecraft/server";
-world.afterEvents.worldLoad.subscribe(() => {
-    console.warn("[TrickyMaze] World loaded.");
+import { world, system } from "@minecraft/server";
+import { loadRunState, saveRunState } from "./state/persistence";
+export const runState = loadRunState();
+system.run(() => {
+    console.warn(`[TrickyMaze] Initialized. phase=${runState.phase} floor=${runState.floor}`);
 });
-// Top-level log — fires at module import, before worldLoad.
-console.warn("[TrickyMaze] Module imported (pre-world).");
+// Placeholder: subsequent tasks hook events here.
+world.afterEvents.playerSpawn.subscribe((ev) => {
+    console.warn(`[TrickyMaze] playerSpawn: ${ev.player.name} (init=${ev.initialSpawn})`);
+});
+// Persist on any state change — convenience helper.
+export function commitState() {
+    saveRunState(runState);
+}
