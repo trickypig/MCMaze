@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { generateMaze, type Maze } from "../src/generation/maze";
 import { buildFloor, type FloorSpec } from "../src/generation/floor";
+import { buildPrison, type PrisonSpec } from "../src/generation/prison";
 
 // Seeded PRNG for determinism in tests — xorshift32.
 function seededRng(seed: number): () => number {
@@ -126,5 +127,32 @@ describe("buildFloor", () => {
     expect(spec.entranceBlock).toBeDefined();
     expect(spec.exitBlock).toBeDefined();
     expect(spec.entranceBlock).not.toEqual(spec.exitBlock);
+  });
+});
+
+describe("buildPrison", () => {
+  it("has a 7x7 footprint, 5 tall", () => {
+    const spec: PrisonSpec = buildPrison({ x: 0, y: -50, z: 0 });
+    const { min, max } = spec.bounds;
+    expect(max.x - min.x + 1).toBe(7);
+    expect(max.z - min.z + 1).toBe(7);
+    expect(max.y - min.y + 1).toBe(5);
+  });
+
+  it("exposes a spawn position inside the room", () => {
+    const spec = buildPrison({ x: 0, y: -50, z: 0 });
+    const p = spec.spawnPos;
+    expect(p.x).toBeGreaterThan(spec.bounds.min.x);
+    expect(p.x).toBeLessThan(spec.bounds.max.x);
+    expect(p.z).toBeGreaterThan(spec.bounds.min.z);
+    expect(p.z).toBeLessThan(spec.bounds.max.z);
+  });
+
+  it("exposes door position and pressure-plate position", () => {
+    const spec = buildPrison({ x: 0, y: -50, z: 0 });
+    expect(spec.doorPos).toBeDefined();
+    expect(spec.pressurePlatePos).toBeDefined();
+    // Pressure plate sits on the floor, door directly beside it on same y.
+    expect(spec.pressurePlatePos.y).toBe(spec.spawnPos.y);
   });
 });

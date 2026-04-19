@@ -1,0 +1,84 @@
+import type { FillOp, Vec3 } from "./floor";
+
+export type PrisonSpec = {
+  operations: FillOp[];
+  bounds: { min: Vec3; max: Vec3 };
+  spawnPos: Vec3;
+  doorPos: Vec3;
+  pressurePlatePos: Vec3;
+};
+
+/**
+ * Builds a 7x7x5 prison room at `anchor` (min corner).
+ * Interior is 5x5x3. North wall (low-z edge) has an iron door with a
+ * pressure plate one block inside the room.
+ */
+export function buildPrison(anchor: Vec3): PrisonSpec {
+  const a = anchor;
+  const ops: FillOp[] = [];
+
+  // Hollow cube: fill solid then carve interior.
+  ops.push({
+    min: { x: a.x, y: a.y, z: a.z },
+    max: { x: a.x + 6, y: a.y + 4, z: a.z + 6 },
+    block: "minecraft:stone_bricks",
+  });
+  ops.push({
+    min: { x: a.x + 1, y: a.y + 1, z: a.z + 1 },
+    max: { x: a.x + 5, y: a.y + 3, z: a.z + 5 },
+    block: "minecraft:air",
+  });
+
+  // Floor = stone bricks (already there from solid fill).
+  // Iron bar windows (east + west walls, middle of the wall).
+  ops.push({
+    min: { x: a.x, y: a.y + 2, z: a.z + 3 },
+    max: { x: a.x, y: a.y + 2, z: a.z + 3 },
+    block: "minecraft:iron_bars",
+  });
+  ops.push({
+    min: { x: a.x + 6, y: a.y + 2, z: a.z + 3 },
+    max: { x: a.x + 6, y: a.y + 2, z: a.z + 3 },
+    block: "minecraft:iron_bars",
+  });
+
+  // Door opening on north wall (low-z edge) at x = a.x + 3.
+  const doorX = a.x + 3;
+  const doorZ = a.z;
+  // Carve 2-tall opening.
+  ops.push({
+    min: { x: doorX, y: a.y + 1, z: doorZ },
+    max: { x: doorX, y: a.y + 2, z: doorZ },
+    block: "minecraft:air",
+  });
+  // Place iron door (lower half). Upper half auto-placed by Bedrock.
+  ops.push({
+    min: { x: doorX, y: a.y + 1, z: doorZ },
+    max: { x: doorX, y: a.y + 1, z: doorZ },
+    block: "minecraft:iron_door",
+  });
+
+  // Pressure plate one block inside the door.
+  const plateX = a.x + 3;
+  const plateY = a.y + 1;
+  const plateZ = a.z + 1;
+  ops.push({
+    min: { x: plateX, y: plateY, z: plateZ },
+    max: { x: plateX, y: plateY, z: plateZ },
+    block: "minecraft:heavy_weighted_pressure_plate",
+  });
+
+  // Spawn in center of room, facing north.
+  const spawnPos: Vec3 = { x: a.x + 3, y: a.y + 1, z: a.z + 3 };
+
+  return {
+    operations: ops,
+    bounds: {
+      min: { x: a.x, y: a.y, z: a.z },
+      max: { x: a.x + 6, y: a.y + 4, z: a.z + 6 },
+    },
+    spawnPos,
+    doorPos: { x: doorX, y: a.y + 1, z: doorZ },
+    pressurePlatePos: { x: plateX, y: plateY, z: plateZ },
+  };
+}
