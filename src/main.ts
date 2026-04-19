@@ -19,13 +19,33 @@ system.run(() => {
   console.warn(`[TrickyMaze] Initialized. phase=${runState.phase} floor=${runState.floor}`);
 
   world.afterEvents.playerSpawn.subscribe((ev) => {
-    if (!ev.initialSpawn) return;
-    if (runState.phase === RunPhase.Idle) {
-      handleFirstJoin(runState);
-    } else {
-      console.warn(`[TrickyMaze] Mid-run join by ${ev.player.name} — not handled in Plan 1.`);
+    const phase = runState.phase;
+    if (phase === RunPhase.Idle) {
+      if (ev.initialSpawn) handleFirstJoin(runState);
+      return;
+    }
+    // Reload/respawn/late-join: restore membership in the alive set so the
+    // player counts for death-gate + teleport checks. `alive` is not
+    // persisted (by design — keeps the blob tiny) so it must be rebuilt
+    // from whoever's actually in the world.
+    if (phase === RunPhase.Prison || phase === RunPhase.FloorActive) {
+      if (!runState.isAlive(ev.player.id)) {
+        runState.markAlive(ev.player.id);
+        commitState();
+      }
+      if (!ev.initialSpawn) return;
+      console.warn(`[TrickyMaze] Mid-run join by ${ev.player.name} — tolerated, not teleported.`);
     }
   });
+
+  // One-shot rehydration for players already connected at script init
+  // (world reload case — playerSpawn may not re-fire for them).
+  if (runState.phase === RunPhase.Prison || runState.phase === RunPhase.FloorActive) {
+    for (const p of world.getAllPlayers()) {
+      runState.markAlive(p.id);
+    }
+    commitState();
+  }
 
   system.runInterval(() => {
     if (runState.phase !== RunPhase.Prison) return;
