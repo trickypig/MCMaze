@@ -1,0 +1,33 @@
+# Claude Code session state
+.claude/
+
+# Node / TypeScript
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Packaged Bedrock artifacts (built from source — not committed)
+*.mcpack
+*.mcaddon
+*.mctemplate
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
