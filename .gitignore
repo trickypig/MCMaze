@@ -1,6 +1,9 @@
 # Claude Code session state
 .claude/
 
+# Git worktrees
+.worktrees/
+
 # Node / TypeScript
 node_modules/
 dist/
