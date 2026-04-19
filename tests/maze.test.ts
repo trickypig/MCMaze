@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { generateMaze, type Maze } from "../src/generation/maze";
+import { buildFloor, type FloorSpec } from "../src/generation/floor";
 
 // Seeded PRNG for determinism in tests — xorshift32.
 function seededRng(seed: number): () => number {
@@ -79,5 +80,51 @@ describe("generateMaze — determinism", () => {
     const b = generateMaze(8, 8, seededRng(123));
     expect(JSON.stringify(a.cells)).toBe(JSON.stringify(b.cells));
     expect(a.exit).toEqual(b.exit);
+  });
+});
+
+describe("buildFloor", () => {
+  it("produces a volume that matches (3N+1) x (3M+1)", () => {
+    const rng = seededRng(42);
+    const maze = generateMaze(5, 5, rng);
+    const spec: FloorSpec = buildFloor(maze, {
+      anchor: { x: 0, y: -50, z: 0 },
+      wallBlock: "minecraft:stone_bricks",
+      floorBlock: "minecraft:stone_bricks",
+      ceilingBlock: "minecraft:stone_bricks",
+    });
+    const { min, max } = spec.bounds;
+    expect(max.x - min.x + 1).toBe(16); // 3*5+1
+    expect(max.z - min.z + 1).toBe(16);
+    expect(max.y - min.y + 1).toBe(5); // floor + 3 air + ceiling
+  });
+
+  it("emits at least one wall operation", () => {
+    const rng = seededRng(42);
+    const maze = generateMaze(5, 5, rng);
+    const spec = buildFloor(maze, {
+      anchor: { x: 0, y: -50, z: 0 },
+      wallBlock: "minecraft:stone_bricks",
+      floorBlock: "minecraft:stone_bricks",
+      ceilingBlock: "minecraft:stone_bricks",
+    });
+    expect(spec.operations.length).toBeGreaterThan(0);
+    expect(spec.operations.some((op) => op.block === "minecraft:stone_bricks")).toBe(
+      true,
+    );
+  });
+
+  it("marks an entrance and an exit block position", () => {
+    const rng = seededRng(42);
+    const maze = generateMaze(5, 5, rng);
+    const spec = buildFloor(maze, {
+      anchor: { x: 0, y: -50, z: 0 },
+      wallBlock: "minecraft:stone_bricks",
+      floorBlock: "minecraft:stone_bricks",
+      ceilingBlock: "minecraft:stone_bricks",
+    });
+    expect(spec.entranceBlock).toBeDefined();
+    expect(spec.exitBlock).toBeDefined();
+    expect(spec.entranceBlock).not.toEqual(spec.exitBlock);
   });
 });
