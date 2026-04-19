@@ -1745,27 +1745,29 @@ export function registerDeathHandlers(state: RunState): void {
 
     console.warn(`[TrickyMaze] Player died: ${entity.name}`);
     state.markDead(entity.id);
+    const lastPlayerDied = state.aliveCount() === 0;
     commitState();
 
     // Immediately set them to spectator (the death screen will briefly show).
     system.runTimeout(() => {
       try {
-        entity.setGameMode(GameMode.spectator);
+        entity.setGameMode(GameMode.Spectator);
       } catch (e) {
         console.warn(`[TrickyMaze] Failed to set spectator: ${String(e)}`);
       }
     }, 10);
 
-    if (state.phase === RunPhase.Resetting) {
+    if (lastPlayerDied) {
       console.warn("[TrickyMaze] Last player died — starting reset countdown.");
       startResetCountdown(state);
     }
   });
 
   world.afterEvents.playerLeave?.subscribe((ev) => {
+    const wasFloorActive = state.phase === RunPhase.FloorActive;
     state.markDead(ev.playerId);
     commitState();
-    if (state.phase === RunPhase.Resetting) {
+    if (wasFloorActive && state.aliveCount() === 0) {
       startResetCountdown(state);
     }
   });

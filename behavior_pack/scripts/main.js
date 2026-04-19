@@ -3,7 +3,9 @@ import { loadRunState, saveRunState } from "./state/persistence";
 import { RunPhase } from "./state/run";
 import { handleFirstJoin, prisonSpec } from "./events/first_join";
 import { handlePressurePlate } from "./events/pressure_plate";
+import { registerDeathHandlers } from "./events/death";
 export const runState = loadRunState();
+registerDeathHandlers(runState);
 system.run(() => {
     console.warn(`[TrickyMaze] Initialized. phase=${runState.phase} floor=${runState.floor}`);
 });
