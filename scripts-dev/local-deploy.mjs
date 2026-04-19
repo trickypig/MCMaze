@@ -20,10 +20,20 @@ function loadEnv(file) {
 loadEnv(".env");
 
 const PROJECT_NAME = process.env.PROJECT_NAME ?? "trickymaze";
-const PRODUCT = process.env.MINECRAFT_PRODUCT ?? "BedrockUWP";
+const PRODUCT = process.env.MINECRAFT_PRODUCT ?? "BedrockLauncher";
 
 const PRESETS = {
-  BedrockUWP: path.join(
+  BedrockLauncher: path.join(
+    os.homedir(),
+    "AppData",
+    "Roaming",
+    "Minecraft Bedrock",
+    "Users",
+    "Shared",
+    "games",
+    "com.mojang",
+  ),
+  BedrockStore: path.join(
     os.homedir(),
     "AppData",
     "Local",
@@ -33,7 +43,7 @@ const PRESETS = {
     "games",
     "com.mojang",
   ),
-  PreviewUWP: path.join(
+  PreviewStore: path.join(
     os.homedir(),
     "AppData",
     "Local",
@@ -56,7 +66,8 @@ function resolveComMojang() {
   }
   const p = PRESETS[PRODUCT];
   if (!p) {
-    console.error(`Unknown MINECRAFT_PRODUCT '${PRODUCT}'. Valid: BedrockUWP, PreviewUWP, Custom.`);
+    const valid = Object.keys(PRESETS).concat("Custom").join(", ");
+    console.error(`Unknown MINECRAFT_PRODUCT '${PRODUCT}'. Valid: ${valid}.`);
     process.exit(1);
   }
   return p;
