@@ -41,3 +41,11 @@ system.runInterval(() => {
 export function commitState(): void {
   saveRunState(runState);
 }
+
+system.afterEvents.scriptEventReceive.subscribe((ev) => {
+  if (ev.id === "trickymaze:shutdown") {
+    world.getDimension("overworld").runCommand("gamerule dommobspawning true");
+    world.sendMessage("§7TrickyMaze shutdown: mob spawning restored.");
+    console.warn("[TrickyMaze] Shutdown event received; gamerule restored.");
+  }
+});
