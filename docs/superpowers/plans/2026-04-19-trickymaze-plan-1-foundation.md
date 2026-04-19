@@ -1423,7 +1423,7 @@ export function handleFirstJoin(state: RunState): void {
   system.runTimeout(() => {
     for (const p of world.getAllPlayers()) {
       p.teleport(prison.spawnPos, { dimension: dim });
-      p.setGameMode(GameMode.adventure);
+      p.setGameMode(GameMode.Adventure);
       const inv = p.getComponent("minecraft:inventory")?.container;
       inv?.clearAll();
       p.runCommand("give @s bread 8");
