@@ -1702,7 +1702,7 @@ Expected: all modules compile.
 
 - [ ] **Step 6: Manual QA — floor generation**
 
-1. Re-enter the prison world (remove previous world, make a new one so `worldInitialize` fires cleanly).
+1. Re-enter the prison world (remove previous world, make a new one so `worldLoad` fires cleanly).
 2. Step on the pressure plate.
 3. Within a couple of seconds you should be teleported to a cell in a stone-brick maze at `Y ≈ -56`.
 4. Explore — verify you can walk through corridors and hit dead-end walls.
