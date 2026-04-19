@@ -33,3 +33,51 @@ describe("generateMaze — cell grid shape", () => {
     }
   });
 });
+
+describe("generateMaze — connectivity", () => {
+  it("every cell is reachable from the entrance", () => {
+    const rng = seededRng(99);
+    const maze = generateMaze(10, 10, rng);
+    for (let x = 0; x < 10; x++) {
+      for (let y = 0; y < 10; y++) {
+        expect(maze.bfsDistance({ x, y })).toBeGreaterThanOrEqual(0);
+      }
+    }
+  });
+
+  it("exit is strictly further from entrance than most cells", () => {
+    const rng = seededRng(99);
+    const maze = generateMaze(10, 10, rng);
+    const exitDist = maze.bfsDistance(maze.exit);
+    expect(exitDist).toBeGreaterThan(0);
+    // At least 80% of cells should be closer than or equal to the exit.
+    let closer = 0;
+    for (let x = 0; x < 10; x++) {
+      for (let y = 0; y < 10; y++) {
+        if (maze.bfsDistance({ x, y }) <= exitDist) closer++;
+      }
+    }
+    expect(closer / 100).toBeGreaterThanOrEqual(0.8);
+  });
+
+  it("entrance is not the exit", () => {
+    const rng = seededRng(7);
+    const maze = generateMaze(8, 8, rng);
+    expect(maze.exit.x === 0 && maze.exit.y === 0).toBe(false);
+  });
+
+  it("finds at least one dead end for nontrivial sizes", () => {
+    const rng = seededRng(7);
+    const maze = generateMaze(12, 12, rng);
+    expect(maze.deadEnds.length).toBeGreaterThan(0);
+  });
+});
+
+describe("generateMaze — determinism", () => {
+  it("same seed produces same maze", () => {
+    const a = generateMaze(8, 8, seededRng(123));
+    const b = generateMaze(8, 8, seededRng(123));
+    expect(JSON.stringify(a.cells)).toBe(JSON.stringify(b.cells));
+    expect(a.exit).toEqual(b.exit);
+  });
+});
