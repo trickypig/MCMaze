@@ -121,3 +121,24 @@ describe("RunState — Plan 2 extensions", () => {
     expect(state.trackedTickingAreas).toEqual(["tm_prison", "tm_floor_1"]);
   });
 });
+
+describe("RunState serialization — Plan 2", () => {
+  it("roundtrips currentFloor and trackedTickingAreas", () => {
+    const state = new RunState();
+    state.enterPrison();
+    state.startFloor(3);
+    state.trackTickingArea("tm_prison");
+    state.trackTickingArea("tm_floor_3");
+    const blob = state.serialize();
+    const restored = RunState.hydrate(blob);
+    expect(restored.currentFloor).toBe(3);
+    expect(restored.trackedTickingAreas).toEqual(["tm_prison", "tm_floor_3"]);
+  });
+
+  it("hydrate tolerates missing new fields (backward compat)", () => {
+    const blob = { phase: RunPhase.Prison, floor: 0 } as any;
+    const restored = RunState.hydrate(blob);
+    expect(restored.currentFloor).toBe(0);
+    expect(restored.trackedTickingAreas).toEqual([]);
+  });
+});
