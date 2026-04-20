@@ -18,7 +18,10 @@ system.run(() => {
   runState = loadRunState();
   registerDeathHandlers(runState);
   registerExitPlatePoll(runState);
-  console.warn(`[TrickyMaze] Initialized. phase=${runState.phase} floor=${runState.floor}`);
+  console.warn(
+    `[TrickyMaze v1.1] Initialized. phase=${runState.phase} floor=${runState.floor} ` +
+      `currentFloor=${runState.currentFloor} tickingAreas=[${runState.trackedTickingAreas.join(",")}]`,
+  );
 
   world.afterEvents.playerSpawn.subscribe((ev) => {
     const phase = runState.phase;
