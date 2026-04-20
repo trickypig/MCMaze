@@ -21,15 +21,18 @@ system.run(() => {
   world.afterEvents.playerSpawn.subscribe((ev) => {
     const phase = runState.phase;
     if (phase === RunPhase.Idle) {
-      if (ev.initialSpawn) handleFirstJoin(runState);
+      // Rebuild prison on any spawn in Idle — covers first-ever join, post-restart, and post-victory.
+      // handleFirstJoin is idempotent if prisonSpec is already set (it early-returns
+      // when phase is not Idle after entering Prison).
+      handleFirstJoin(runState);
       return;
     }
-    // Reload/respawn/late-join: restore membership in the alive set so the
-    // player counts for death-gate + teleport checks. `alive` is not
-    // persisted (by design — keeps the blob tiny) so it must be rebuilt
-    // from whoever's actually in the world.
+    if (phase === RunPhase.GameOver) {
+      // Dead screen visible — don't rebuild, don't restore. Wait for restart scriptevent.
+      return;
+    }
     if (phase === RunPhase.Prison || phase === RunPhase.FloorActive) {
-      if (!runState.isAlive(ev.player.id)) {
+      if (!runState.isAlive(ev.player.id) && !runState.isDead(ev.player.id)) {
         runState.markAlive(ev.player.id);
         commitState();
       }
