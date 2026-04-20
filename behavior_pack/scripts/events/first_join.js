@@ -24,6 +24,7 @@ export function handleFirstJoin(state) {
     }
     dim.runCommand(`tickingarea add ${ANCHOR.x - 10} ${ANCHOR.y - FLOOR_Y_SPAN} ${ANCHOR.z - 10} ` +
         `${ANCHOR.x + 140} ${ANCHOR.y + 10} ${ANCHOR.z + 140} ${TICKING_AREA_NAME} true`);
+    state.trackTickingArea(TICKING_AREA_NAME);
     // Disable natural mob spawning world-wide for this session (§9.1).
     dim.runCommand("gamerule domobspawning false");
     // tickingarea schedules chunk loading asynchronously; fillBlocks throws
