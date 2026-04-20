@@ -84,8 +84,12 @@ export function beginDescent(state: RunState): void {
       system.runTimeout(() => {
         try { dim.runCommand("weather clear"); } catch { /* ignore */ }
         descentInFlight = false;
-        state.finishDescent();
-        commitState();
+        // Victory path has already called resetToIdle() — only finish descent if
+        // we're still in Descending phase (i.e., normal floor-to-floor transition).
+        if (state.phase === RunPhase.Descending) {
+          state.finishDescent();
+          commitState();
+        }
         for (const p of [...world.getAllPlayers()].filter((p) => state.isAlive(p.id))) {
           unfreezePlayer(p);
         }

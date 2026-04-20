@@ -2,6 +2,7 @@ import { world, system, GameMode, Player } from "@minecraft/server";
 import { RunPhase, type RunState } from "../state/run";
 import { activeFloor, buildAndEnterFloor, setActiveFloor, FLOOR_DEPTH } from "./pressure_plate";
 import { ANCHOR } from "./first_join";
+import { commitState } from "../main";
 
 const CHUNK_WAIT_TICKS = 10;
 const CHUNK_WAIT_MAX_ATTEMPTS = 30;
@@ -128,6 +129,7 @@ function runVictory(state: RunState): void {
   }
   state.resetToIdle();
   setActiveFloor(null);
+  commitState();
 }
 
 function whenChunksLoaded(
