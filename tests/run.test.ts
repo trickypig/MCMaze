@@ -38,12 +38,16 @@ describe("RunState", () => {
     expect(state.isAlive("player-b")).toBe(true);
   });
 
-  it("transitions FLOOR_ACTIVE -> RESETTING when last alive dies", () => {
+  it("markDead moves the id from alive to dead set", () => {
+    const state = new RunState();
     state.enterPrison();
     state.markAlive("player-a");
     state.startFloor(1);
     state.markDead("player-a");
-    expect(state.phase).toBe(RunPhase.Resetting);
+    expect(state.isDead("player-a")).toBe(true);
+    expect(state.aliveCount()).toBe(0);
+    // Phase does NOT auto-change — the event handler drives GameOver.
+    expect(state.phase).toBe(RunPhase.FloorActive);
   });
 
   it("reset() clears floor and alive set back to prison defaults", () => {
@@ -64,5 +68,56 @@ describe("RunState", () => {
     const restored = RunState.hydrate(blob);
     expect(restored.phase).toBe(RunPhase.FloorActive);
     expect(restored.floor).toBe(2);
+  });
+});
+
+describe("RunState — Plan 2 extensions", () => {
+  it("tracks a dead set separately from alive", () => {
+    const state = new RunState();
+    state.enterPrison();
+    state.startFloor(1);
+    state.markAlive("a");
+    state.markAlive("b");
+    state.markDead("a");
+    expect(state.aliveCount()).toBe(1);
+    expect(state.deadCount()).toBe(1);
+    expect(state.isDead("a")).toBe(true);
+  });
+
+  it("GameOver is reachable via triggerGameOver() when all alive dead", () => {
+    const state = new RunState();
+    state.enterPrison();
+    state.markAlive("a");
+    state.startFloor(1);
+    state.markDead("a");
+    state.triggerGameOver();
+    expect(state.phase).toBe(RunPhase.GameOver);
+  });
+
+  it("clearDead() moves every dead id back into alive", () => {
+    const state = new RunState();
+    state.enterPrison();
+    state.markAlive("a");
+    state.markAlive("b");
+    state.startFloor(1);
+    state.markDead("a");
+    state.clearDead();
+    expect(state.aliveCount()).toBe(2);
+    expect(state.deadCount()).toBe(0);
+    expect(state.isDead("a")).toBe(false);
+  });
+
+  it("currentFloor + trackedTickingAreas default to empty", () => {
+    const state = new RunState();
+    expect(state.currentFloor).toBe(0);
+    expect(state.trackedTickingAreas).toEqual([]);
+  });
+
+  it("trackTickingArea() deduplicates names", () => {
+    const state = new RunState();
+    state.trackTickingArea("tm_prison");
+    state.trackTickingArea("tm_prison");
+    state.trackTickingArea("tm_floor_1");
+    expect(state.trackedTickingAreas).toEqual(["tm_prison", "tm_floor_1"]);
   });
 });
