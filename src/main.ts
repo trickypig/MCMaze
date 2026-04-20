@@ -2,7 +2,7 @@ import { world, system } from "@minecraft/server";
 import { loadRunState, saveRunState } from "./state/persistence";
 import { RunPhase, RunState } from "./state/run";
 import { handleFirstJoin, prisonSpec } from "./events/first_join";
-import { handlePressurePlate } from "./events/pressure_plate";
+import { handlePressurePlate, setActiveFloor } from "./events/pressure_plate";
 import { registerDeathHandlers } from "./events/death";
 
 // Hydrated on the first system tick — world.getDynamicProperty is forbidden
@@ -70,5 +70,26 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
     world.getDimension("overworld").runCommand("gamerule domobspawning true");
     world.sendMessage("§7TrickyMaze shutdown: mob spawning restored.");
     console.warn("[TrickyMaze] Shutdown event received; gamerule restored.");
+    return;
+  }
+  if (ev.id === "trickymaze:restart") {
+    if (runState.phase !== RunPhase.GameOver) {
+      console.warn(`[TrickyMaze] restart ignored — phase is ${runState.phase}`);
+      world.sendMessage("§cRestart can only be used after a Run Failed screen.");
+      return;
+    }
+    handleRestart();
   }
 });
+
+function handleRestart(): void {
+  console.warn("[TrickyMaze] Restart scriptevent — resetting run.");
+  const dim = world.getDimension("overworld");
+  for (const name of runState.trackedTickingAreas) {
+    try { dim.runCommand(`tickingarea remove ${name}`); } catch { /* ignore */ }
+  }
+  setActiveFloor(null);
+  runState.resetToIdle();
+  commitState();
+  world.sendMessage("§aRun reset. Respawn or relog to begin a new run.");
+}
