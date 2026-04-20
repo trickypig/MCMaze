@@ -11,7 +11,7 @@ import { buildFixtures } from "../generation/fixtures";
 import { KEY_ITEM_TYPE, KEY_DISPLAY_NAME, KEY_LORE } from "../generation/key_item";
 import type { FloorFixtures } from "../generation/fixtures";
 
-const FLOOR_DEPTH = 30;
+export const FLOOR_DEPTH = 30;
 const FLOOR_Y_SPAN_PAD = 5;
 
 export interface ActiveFloor {

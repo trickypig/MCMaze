@@ -1,12 +1,11 @@
 import { world, system, GameMode, Player } from "@minecraft/server";
 import { RunPhase, type RunState } from "../state/run";
-import { activeFloor, buildAndEnterFloor, setActiveFloor } from "./pressure_plate";
+import { activeFloor, buildAndEnterFloor, setActiveFloor, FLOOR_DEPTH } from "./pressure_plate";
 import { ANCHOR } from "./first_join";
 
 const CHUNK_WAIT_TICKS = 10;
 const CHUNK_WAIT_MAX_ATTEMPTS = 30;
 const MAX_FLOOR = 4;
-const FLOOR_DEPTH = 30;
 
 /**
  * Execute the transition step of the descent cinematic.
@@ -61,6 +60,10 @@ export function runDescentTransition(state: RunState, done: () => void): void {
   whenChunksLoaded(nextAnchor, (ok) => {
     if (!ok) {
       console.warn("[TrickyMaze] Descent transition aborted — new floor chunks never loaded.");
+      try { dim.runCommand(`tickingarea remove ${nextTickingAreaName}`); } catch { /* ignore */ }
+      state.trackedTickingAreas = state.trackedTickingAreas.filter(
+        (n) => n !== nextTickingAreaName,
+      );
       done();
       return;
     }
@@ -75,11 +78,14 @@ export function runDescentTransition(state: RunState, done: () => void): void {
 
     buildAndEnterFloor(state, nextFloor);
 
-    // Teleport + restore every player (alive + dead) to the new floor start.
+    // Restore dead players to the new floor start.
+    // buildAndEnterFloor already teleports alive players to the entrance.
+    // Dead players are not handled there, so we restore them here.
+    // cell (0,0) center — matches buildAndEnterFloor's entranceBlock since maze.entrance is always (0,0)
     const spec = activeFloor;
     if (!spec) { done(); return; }
     const startPos = {
-      x: spec.anchor.x + 2.5, // cellCenter of (0,0) = anchor + 2 blocks
+      x: spec.anchor.x + 2.5,
       y: spec.anchor.y + 1,
       z: spec.anchor.z + 2.5,
     };
@@ -91,9 +97,6 @@ export function runDescentTransition(state: RunState, done: () => void): void {
       p.teleport(startPos, { dimension: dim });
     }
     state.clearDead();
-    for (const p of [...world.getAllPlayers()].filter((p) => state.isAlive(p.id))) {
-      p.teleport(startPos, { dimension: dim });
-    }
 
     done();
   });
