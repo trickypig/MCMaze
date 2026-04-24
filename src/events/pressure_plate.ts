@@ -4,6 +4,8 @@ import { RunPhase, type RunState } from "../state/run";
 import { buildFloor } from "../generation/floor";
 import { generateMaze } from "../generation/maze";
 import { applyOps } from "../generation/world_writer";
+import { buildSpawnManifest } from "../generation/spawn_plan";
+import { spawnFromManifest } from "../monsters/spawner";
 import { commitState } from "../main";
 import { worldSeededRng } from "../generation/rng";
 
@@ -38,13 +40,19 @@ export function handlePressurePlate(state: RunState): void {
   state.startFloor(floorNum);
   commitState();
 
+  // Spawn monsters after block placement completes.
+  const manifest = buildSpawnManifest(maze, floorNum, worldSeededRng(floorNum + 1_000_000));
+  const dim = world.getDimension("overworld");
+  const spawnedCount = spawnFromManifest(dim, floorAnchor, manifest, floorNum);
+  console.warn(`[TrickyMaze] Floor ${floorNum} spawned ${spawnedCount} monsters.`);
+
   // Teleport all living players to the entrance.
   const entrance = spec.entranceBlock;
   for (const p of world.getAllPlayers()) {
     if (!state.isAlive(p.id)) continue;
     p.teleport(
       { x: entrance.x + 0.5, y: entrance.y, z: entrance.z + 0.5 },
-      { dimension: world.getDimension("overworld") },
+      { dimension: dim },
     );
     p.setGameMode(GameMode.Adventure);
   }
