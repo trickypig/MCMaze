@@ -1,0 +1,13 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "trickymaze:patroller_zombie",
+      "materials": { "default": "zombie" },
+      "textures": { "default": "textures/entity/zombie/zombie" },
+      "geometry": { "default": "geometry.humanoid" },
+      "render_controllers": ["controller.render.zombie"],
+      "spawn_egg": { "base_color": "#0000ff", "overlay_color": "#800080" }
+    }
+  }
+}
