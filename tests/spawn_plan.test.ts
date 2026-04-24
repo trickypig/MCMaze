@@ -112,3 +112,29 @@ describe("buildSpawnManifest — straight runs", () => {
     expect(a).toEqual(b);
   });
 });
+
+import { generateMaze } from "../src/generation/maze";
+
+describe("buildSpawnManifest — real maze density", () => {
+  it("produces entries on a 12×12 L1 maze", () => {
+    const maze = generateMaze(12, 12, mulberry32(123));
+    const manifest = buildSpawnManifest(maze, 1, mulberry32(456));
+    // With ~1 per 12 cells and 144 cells, target is 12; but eligible-run
+    // count may be smaller. Assert plausible bounds, not an exact number.
+    expect(manifest.length).toBeGreaterThan(0);
+    expect(manifest.length).toBeLessThanOrEqual(12);
+  });
+
+  it("never places an entry on the entrance or exit cell", () => {
+    const maze = generateMaze(12, 12, mulberry32(321));
+    const manifest = buildSpawnManifest(maze, 1, mulberry32(654));
+    const ex = maze.entrance;
+    const xt = maze.exit;
+    for (const entry of manifest) {
+      const cellX = Math.floor((entry.pos.x - 2) / 3);
+      const cellY = Math.floor((entry.pos.z - 2) / 3);
+      expect({ x: cellX, y: cellY }).not.toEqual(ex);
+      expect({ x: cellX, y: cellY }).not.toEqual(xt);
+    }
+  });
+});
