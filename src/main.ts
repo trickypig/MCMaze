@@ -4,7 +4,7 @@ import { RunPhase, RunState } from "./state/run";
 import { handleFirstJoin, prisonSpec } from "./events/first_join";
 import { handlePressurePlate } from "./events/pressure_plate";
 import { registerDeathHandlers } from "./events/death";
-import { initMonsters } from "./monsters";
+import { initMonsters } from "./monsters/index";
 import { startHud } from "./ui/hud";
 
 // Hydrated on the first system tick — world.getDynamicProperty is forbidden
