@@ -74,5 +74,46 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
     world.getDimension("overworld").runCommand("gamerule domobspawning true");
     world.sendMessage("§7TrickyMaze shutdown: mob spawning restored.");
     console.warn("[TrickyMaze] Shutdown event received; gamerule restored.");
+    return;
+  }
+  if (ev.id === "trickymaze:smoke_monsters") {
+    runSmokeMonsters();
+    return;
   }
 });
+
+function runSmokeMonsters(): void {
+  const dim = world.getDimension("overworld");
+  const origin = world.getAllPlayers()[0]?.location;
+  if (!origin) {
+    console.warn("[TrickyMaze] smoke: no players in world.");
+    return;
+  }
+  const pos = { x: origin.x + 2, y: origin.y, z: origin.z };
+  let e;
+  try {
+    e = dim.spawnEntity("trickymaze:patroller_zombie", pos);
+  } catch (err) {
+    console.warn(`[TrickyMaze] smoke: spawnEntity failed: ${String(err)}`);
+    return;
+  }
+  if (!e) {
+    console.warn("[TrickyMaze] smoke: spawnEntity returned undefined.");
+    return;
+  }
+  e.setDynamicProperty("trickymaze:behavior", "patroller");
+  e.setDynamicProperty("trickymaze:home_x", pos.x);
+  e.setDynamicProperty("trickymaze:home_y", pos.y);
+  e.setDynamicProperty("trickymaze:home_z", pos.z);
+  e.setDynamicProperty("trickymaze:patrol_axis", "E");
+  e.setDynamicProperty("trickymaze:patrol_length", 12);
+  e.setDynamicProperty("trickymaze:damage_mult", 1);
+
+  system.runTimeout(() => {
+    const n = dim.getEntities({ families: ["trickymaze_patroller"] }).length;
+    const msg = n >= 1 ? "§aPASS" : "§cFAIL";
+    world.sendMessage(`${msg} §7smoke_monsters (patroller count: ${n})`);
+    console.warn(`[TrickyMaze] smoke_monsters patroller count: ${n}`);
+    try { e.remove(); } catch { /* ignore */ }
+  }, 10);
+}
