@@ -1,0 +1,6 @@
+entity.trickymaze:wither_sleeper.name=Wither Sleeper
+item.spawn_egg.entity.trickymaze:wither_sleeper.name=Spawn Wither Sleeper
+entity.trickymaze:wither_patroller.name=Wither Patroller
+item.spawn_egg.entity.trickymaze:wither_patroller.name=Spawn Wither Patroller
+entity.trickymaze:wither_lurker.name=Wither Lurker
+item.spawn_egg.entity.trickymaze:wither_lurker.name=Spawn Wither Lurker
