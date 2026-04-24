@@ -48,3 +48,67 @@ describe("buildSpawnManifest", () => {
     expect(manifest).toEqual([]);
   });
 });
+
+describe("buildSpawnManifest — straight runs", () => {
+  it("detects a single N-S run and emits one patroller entry", () => {
+    // 6-cell N-S corridor: entrance=(0,0), exit=(0,5). Interior cells y=1..4
+    // are all NS-through and form a 4-cell run that excludes both endpoints,
+    // so exactly one patroller entry should be emitted.
+    const maze = straightCorridorMaze(6);
+    const manifest = buildSpawnManifest(maze, 1, mulberry32(42));
+    expect(manifest.length).toBe(1);
+    expect(manifest[0].behavior).toBe("patroller");
+    expect(manifest[0].theme).toBe("old_prison");
+    expect(["N", "S"]).toContain(manifest[0].config.patrolAxis);
+    expect(manifest[0].config.patrolLength).toBe(12);
+  });
+
+  it("emits a patroller when a run excludes entrance and exit", () => {
+    // Build a wider maze: two parallel 6-cell N-S corridors joined at the top.
+    // Left corridor holds entrance; right corridor's bottom cell holds exit.
+    // The right corridor's interior run (cells y=1..4) is a 4-cell run with
+    // neither endpoint — eligible.
+    const cells: Cell[][] = [[], []];
+    for (let y = 0; y < 6; y++) {
+      // Left column: N/S open except top; top is open E so it joins right.
+      cells[0].push({
+        walls: {
+          N: y === 0,
+          S: y === 5,
+          E: y !== 0, // open E at y=0
+          W: true,
+        },
+      });
+      // Right column: N/S open except top and bottom walls; top open W.
+      cells[1].push({
+        walls: {
+          N: y === 0,
+          S: y === 5,
+          E: true,
+          W: y !== 0, // open W at y=0
+        },
+      });
+    }
+    const maze: Maze = {
+      cells,
+      entrance: { x: 0, y: 5 },
+      exit: { x: 1, y: 5 },
+      deadEnds: [{ x: 0, y: 5 }, { x: 1, y: 5 }],
+      bfsDistance: (c) => (c.x === 0 ? 5 - c.y : 6 + c.y),
+    };
+    const manifest = buildSpawnManifest(maze, 1, mulberry32(7));
+    expect(manifest.length).toBeGreaterThanOrEqual(1);
+    const entry = manifest[0];
+    expect(entry.behavior).toBe("patroller");
+    expect(entry.theme).toBe("old_prison");
+    expect(["N", "S"]).toContain(entry.config.patrolAxis);
+    expect(entry.config.patrolLength).toBeGreaterThanOrEqual(12); // 4 cells × 3
+  });
+
+  it("is deterministic for the same seed", () => {
+    const maze = straightCorridorMaze(6);
+    const a = buildSpawnManifest(maze, 1, mulberry32(99));
+    const b = buildSpawnManifest(maze, 1, mulberry32(99));
+    expect(a).toEqual(b);
+  });
+});
