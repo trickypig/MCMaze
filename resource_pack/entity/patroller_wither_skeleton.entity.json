@@ -2,16 +2,16 @@
 	"format_version": "1.8.0",
 	"minecraft:client_entity": {
 		"description": {
-			"identifier": "trickymaze:wither_patroller",
+			"identifier": "trickymaze:patroller_wither_skeleton",
 			"min_engine_version": "1.8.0",
 			"materials": {
 				"default": "skeleton"
 			},
 			"textures": {
-				"default": "textures/entity/wither_patroller"
+				"default": "textures/entity/patroller_wither_skeleton"
 			},
 			"geometry": {
-				"default": "geometry.wither_patroller"
+				"default": "geometry.patroller_wither_skeleton"
 			},
 			"scripts": {
 				"pre_animation": ["variable.tcos0 = (Math.cos(query.modified_distance_moved * 38.17) * query.modified_move_speed / variable.gliding_speed_value) * 57.3;"]

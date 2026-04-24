@@ -2,7 +2,7 @@
 	"format_version": "1.16.0",
 	"minecraft:entity": {
 		"description": {
-			"identifier": "trickymaze:wither_lurker",
+			"identifier": "trickymaze:lurker_wither_skeleton",
 			"is_spawnable": true,
 			"is_summonable": true,
 			"is_experimental": false
