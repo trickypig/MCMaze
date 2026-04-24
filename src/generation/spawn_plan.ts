@@ -1,12 +1,11 @@
 import type { Cell, Coord, Maze } from "./maze";
+import { type Behavior, type Theme, themeForFloor } from "../monsters/themes";
 
-export type SpawnBehavior = "patroller";
-export type SpawnTheme = "old_prison";
 export type Axis = "N" | "S" | "E" | "W";
 
 export type SpawnManifestEntry = {
-  behavior: SpawnBehavior;
-  theme: SpawnTheme;
+  behavior: Behavior;
+  theme: Theme;
   pos: { x: number; y: number; z: number };
   config: {
     homePoint: { x: number; y: number; z: number };
@@ -78,7 +77,7 @@ function shuffleInPlace<T>(arr: T[], rng: () => number): void {
   }
 }
 
-function runToEntry(run: StraightRun): SpawnManifestEntry {
+function runToEntry(run: StraightRun, theme: Theme): SpawnManifestEntry {
   const mid = run.cells[Math.floor(run.cells.length / 2)];
   const cx = mid.x * 3 + 2;
   const cz = mid.y * 3 + 2;
@@ -86,7 +85,7 @@ function runToEntry(run: StraightRun): SpawnManifestEntry {
   const axis: Axis = run.axis === "NS" ? "S" : "E";
   return {
     behavior: "patroller",
-    theme: "old_prison",
+    theme,
     pos: { x: cx, y: cy, z: cz },
     config: {
       homePoint: { x: cx, y: cy, z: cz },
@@ -101,6 +100,7 @@ export function buildSpawnManifest(
   floor: number,
   rng: () => number,
 ): SpawnManifestEntry[] {
+  const theme = themeForFloor(floor);
   const runs = findStraightRuns(maze).filter(
     (r) =>
       !containsCoord(r.cells, maze.entrance) &&
@@ -117,5 +117,5 @@ export function buildSpawnManifest(
   shuffleInPlace(runs, rng);
 
   const chosen = runs.slice(0, target);
-  return chosen.map(runToEntry);
+  return chosen.map((run) => runToEntry(run, theme));
 }

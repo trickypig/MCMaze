@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { buildSpawnManifest } from "../src/generation/spawn_plan";
 import type { Maze, Cell, Coord } from "../src/generation/maze";
+import { generateMaze } from "../src/generation/maze";
 
 /**
  * Build a Maze fixture with no walls broken along a single straight N-S
@@ -112,8 +113,6 @@ describe("buildSpawnManifest — straight runs", () => {
     expect(a).toEqual(b);
   });
 });
-
-import { generateMaze } from "../src/generation/maze";
 
 describe("buildSpawnManifest — real maze density", () => {
   it("produces entries on a 12×12 L1 maze", () => {
