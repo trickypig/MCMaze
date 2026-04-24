@@ -1,10 +1,11 @@
 {
   "name": "trickymaze",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "type": "module",
   "description": "A Minecraft Bedrock add-on that turns the world into a descending maze dungeon.",
   "scripts": {
+    "prebuild": "node -e \"require('fs').rmSync('behavior_pack/scripts',{recursive:true,force:true})\"",
     "build": "tsc",
     "watch": "tsc --watch",
     "test": "vitest run",
