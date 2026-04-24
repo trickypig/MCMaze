@@ -101,10 +101,6 @@ function tickPatroller(entity: Entity): void {
       y: entity.location.y,
       z: cfg.homePoint.z + axis.z * state.dir * halfLen,
     };
-    if (distance(entity.location, target) < 0.6) {
-      state.dir = (state.dir === 1 ? -1 : 1) as 1 | -1;
-    }
-
     try {
       entity.applyImpulse({
         x: axis.x * state.dir * IMPULSE_MAG,
@@ -112,6 +108,10 @@ function tickPatroller(entity: Entity): void {
         z: axis.z * state.dir * IMPULSE_MAG,
       });
     } catch { /* entity may have been removed */ }
+
+    if (distance(entity.location, target) < 0.6) {
+      state.dir = (state.dir === 1 ? -1 : 1) as 1 | -1;
+    }
 
     // Stuck detection.
     const moved = distance(entity.location, state.lastPos);
@@ -156,7 +156,7 @@ function tickPatroller(entity: Entity): void {
 
   // state.kind === "charge"
   const target = world.getEntity(state.targetId);
-  if (!target || !target.isValid || now - state.startTick > CHARGE_TICKS) {
+  if (!target || !target.isValid || now - state.startTick >= CHARGE_TICKS) {
     setRuntime<Runtime>(entity.id, {
       kind: "cooldown",
       untilTick: now + COOLDOWN_TICKS,

@@ -45,17 +45,29 @@ export function isInFrontOf(
 }
 
 export function hasLineOfSight(entity: Entity, target: Player): boolean {
-  const hit = entity.getBlockFromViewDirection({ maxDistance: 6 });
+  // Raise origin by ~1.5 to approximate eye height.
+  const origin: Vector3 = {
+    x: entity.location.x,
+    y: entity.location.y + 1.5,
+    z: entity.location.z,
+  };
+  const tx = target.location.x - origin.x;
+  const ty = target.location.y - origin.y;
+  const tz = target.location.z - origin.z;
+  const targetDist = Math.hypot(tx, ty, tz);
+  if (targetDist < 0.001) return true;
+  const direction: Vector3 = {
+    x: tx / targetDist,
+    y: ty / targetDist,
+    z: tz / targetDist,
+  };
+  const hit = entity.dimension.getBlockFromRay(origin, direction, { maxDistance: 6 });
   if (!hit) return true;
-  const dx = hit.block.location.x - entity.location.x;
-  const dy = hit.block.location.y - entity.location.y;
-  const dz = hit.block.location.z - entity.location.z;
-  const blockDist = Math.hypot(dx, dy, dz);
-  const tx = target.location.x - entity.location.x;
-  const ty = target.location.y - entity.location.y;
-  const tz = target.location.z - entity.location.z;
-  const playerDist = Math.hypot(tx, ty, tz);
-  return playerDist <= blockDist;
+  const bx = hit.block.location.x - origin.x;
+  const by = hit.block.location.y - origin.y;
+  const bz = hit.block.location.z - origin.z;
+  const blockDist = Math.hypot(bx, by, bz);
+  return targetDist <= blockDist;
 }
 
 export function faceToward(entity: Entity, target: Vector3): void {
