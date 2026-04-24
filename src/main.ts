@@ -2,8 +2,9 @@ import { world, system } from "@minecraft/server";
 import { loadRunState, saveRunState } from "./state/persistence";
 import { RunPhase, RunState } from "./state/run";
 import { handleFirstJoin, prisonSpec } from "./events/first_join";
-import { handlePressurePlate } from "./events/pressure_plate";
+import { handlePressurePlate, setActiveFloor } from "./events/pressure_plate";
 import { registerDeathHandlers } from "./events/death";
+import { registerExitPlatePoll } from "./events/exit_plate";
 
 // Hydrated on the first system tick — world.getDynamicProperty is forbidden
 // during early execution, so top-level calls crash with a ReferenceError.
@@ -16,20 +17,27 @@ export function commitState(): void {
 system.run(() => {
   runState = loadRunState();
   registerDeathHandlers(runState);
-  console.warn(`[TrickyMaze] Initialized. phase=${runState.phase} floor=${runState.floor}`);
+  registerExitPlatePoll(runState);
+  console.warn(
+    `[TrickyMaze v1.1] Initialized. phase=${runState.phase} floor=${runState.floor} ` +
+      `currentFloor=${runState.currentFloor} tickingAreas=[${runState.trackedTickingAreas.join(",")}]`,
+  );
 
   world.afterEvents.playerSpawn.subscribe((ev) => {
     const phase = runState.phase;
     if (phase === RunPhase.Idle) {
-      if (ev.initialSpawn) handleFirstJoin(runState);
+      // Rebuild prison on any spawn in Idle — covers first-ever join, post-restart, and post-victory.
+      // handleFirstJoin is idempotent if prisonSpec is already set (it early-returns
+      // when phase is not Idle after entering Prison).
+      handleFirstJoin(runState);
       return;
     }
-    // Reload/respawn/late-join: restore membership in the alive set so the
-    // player counts for death-gate + teleport checks. `alive` is not
-    // persisted (by design — keeps the blob tiny) so it must be rebuilt
-    // from whoever's actually in the world.
+    if (phase === RunPhase.GameOver) {
+      // Dead screen visible — don't rebuild, don't restore. Wait for restart scriptevent.
+      return;
+    }
     if (phase === RunPhase.Prison || phase === RunPhase.FloorActive) {
-      if (!runState.isAlive(ev.player.id)) {
+      if (!runState.isAlive(ev.player.id) && !runState.isDead(ev.player.id)) {
         runState.markAlive(ev.player.id);
         commitState();
       }
@@ -70,5 +78,26 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
     world.getDimension("overworld").runCommand("gamerule domobspawning true");
     world.sendMessage("§7TrickyMaze shutdown: mob spawning restored.");
     console.warn("[TrickyMaze] Shutdown event received; gamerule restored.");
+    return;
+  }
+  if (ev.id === "trickymaze:restart") {
+    if (runState.phase !== RunPhase.GameOver) {
+      console.warn(`[TrickyMaze] restart ignored — phase is ${runState.phase}`);
+      world.sendMessage("§cRestart can only be used after a Run Failed screen.");
+      return;
+    }
+    handleRestart();
   }
 });
+
+function handleRestart(): void {
+  console.warn("[TrickyMaze] Restart scriptevent — resetting run.");
+  const dim = world.getDimension("overworld");
+  for (const name of runState.trackedTickingAreas) {
+    try { dim.runCommand(`tickingarea remove ${name}`); } catch { /* ignore */ }
+  }
+  setActiveFloor(null);
+  runState.resetToIdle();
+  commitState();
+  world.sendMessage("§aRun reset. Respawn or relog to begin a new run.");
+}
