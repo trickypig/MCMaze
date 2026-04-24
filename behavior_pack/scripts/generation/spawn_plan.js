@@ -1,4 +1,4 @@
-import { themeForFloor } from "../monsters/themes";
+import { themeForFloor } from "./themes";
 // A cell qualifies as part of a straight NS run interior iff it has only
 // N+S open (E and W both walled). The run may be bounded at either end by
 // a cell that is open on the opposite side as well (T-junction / corner).
@@ -73,7 +73,7 @@ function runToEntry(run, theme) {
     };
 }
 export function buildSpawnManifest(maze, floor, rng) {
-    const theme = themeForFloor(floor);
+    const theme = themeForFloor(floor).id;
     const runs = findStraightRuns(maze).filter((r) => !containsCoord(r.cells, maze.entrance) &&
         !containsCoord(r.cells, maze.exit));
     if (runs.length === 0)

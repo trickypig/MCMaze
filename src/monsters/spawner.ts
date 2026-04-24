@@ -1,6 +1,6 @@
 import { type Dimension, type Vector3 } from "@minecraft/server";
 import type { SpawnManifestEntry } from "../generation/spawn_plan";
-import { resolveEntityId } from "./themes";
+import { resolveEntityId } from "./identifiers";
 import { healthMultiplier, damageMultiplier } from "./stats";
 
 export function spawnFromManifest(

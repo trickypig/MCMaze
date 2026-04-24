@@ -2,8 +2,11 @@ import { world, system } from "@minecraft/server";
 import { loadRunState, saveRunState } from "./state/persistence";
 import { RunPhase } from "./state/run";
 import { handleFirstJoin, prisonSpec } from "./events/first_join";
-import { handlePressurePlate } from "./events/pressure_plate";
+import { handlePressurePlate, setActiveFloor } from "./events/pressure_plate";
 import { registerDeathHandlers } from "./events/death";
+import { registerExitPlatePoll } from "./events/exit_plate";
+import { initMonsters } from "./monsters/index";
+import { startHud } from "./ui/hud";
 // Hydrated on the first system tick — world.getDynamicProperty is forbidden
 // during early execution, so top-level calls crash with a ReferenceError.
 export let runState;
@@ -13,20 +16,26 @@ export function commitState() {
 system.run(() => {
     runState = loadRunState();
     registerDeathHandlers(runState);
-    console.warn(`[TrickyMaze] Initialized. phase=${runState.phase} floor=${runState.floor}`);
+    registerExitPlatePoll(runState);
+    initMonsters();
+    startHud(runState);
+    console.warn(`[TrickyMaze v1.2] Initialized. phase=${runState.phase} floor=${runState.floor} ` +
+        `currentFloor=${runState.currentFloor} tickingAreas=[${runState.trackedTickingAreas.join(",")}]`);
     world.afterEvents.playerSpawn.subscribe((ev) => {
         const phase = runState.phase;
         if (phase === RunPhase.Idle) {
-            if (ev.initialSpawn)
-                handleFirstJoin(runState);
+            // Rebuild prison on any spawn in Idle — covers first-ever join, post-restart, and post-victory.
+            // handleFirstJoin is idempotent if prisonSpec is already set (it early-returns
+            // when phase is not Idle after entering Prison).
+            handleFirstJoin(runState);
             return;
         }
-        // Reload/respawn/late-join: restore membership in the alive set so the
-        // player counts for death-gate + teleport checks. `alive` is not
-        // persisted (by design — keeps the blob tiny) so it must be rebuilt
-        // from whoever's actually in the world.
+        if (phase === RunPhase.GameOver) {
+            // Dead screen visible — don't rebuild, don't restore. Wait for restart scriptevent.
+            return;
+        }
         if (phase === RunPhase.Prison || phase === RunPhase.FloorActive) {
-            if (!runState.isAlive(ev.player.id)) {
+            if (!runState.isAlive(ev.player.id) && !runState.isDead(ev.player.id)) {
                 runState.markAlive(ev.player.id);
                 commitState();
             }
@@ -65,5 +74,71 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
         world.getDimension("overworld").runCommand("gamerule domobspawning true");
         world.sendMessage("§7TrickyMaze shutdown: mob spawning restored.");
         console.warn("[TrickyMaze] Shutdown event received; gamerule restored.");
+        return;
+    }
+    if (ev.id === "trickymaze:restart") {
+        if (runState.phase !== RunPhase.GameOver) {
+            console.warn(`[TrickyMaze] restart ignored — phase is ${runState.phase}`);
+            world.sendMessage("§cRestart can only be used after a Run Failed screen.");
+            return;
+        }
+        handleRestart();
+        return;
+    }
+    if (ev.id === "trickymaze:smoke_monsters") {
+        runSmokeMonsters();
+        return;
     }
 });
+function handleRestart() {
+    console.warn("[TrickyMaze] Restart scriptevent — resetting run.");
+    const dim = world.getDimension("overworld");
+    for (const name of runState.trackedTickingAreas) {
+        try {
+            dim.runCommand(`tickingarea remove ${name}`);
+        }
+        catch { /* ignore */ }
+    }
+    setActiveFloor(null);
+    runState.resetToIdle();
+    commitState();
+    world.sendMessage("§aRun reset. Respawn or relog to begin a new run.");
+}
+function runSmokeMonsters() {
+    const dim = world.getDimension("overworld");
+    const origin = world.getAllPlayers()[0]?.location;
+    if (!origin) {
+        console.warn("[TrickyMaze] smoke: no players in world.");
+        return;
+    }
+    const pos = { x: origin.x + 2, y: origin.y, z: origin.z };
+    let e;
+    try {
+        e = dim.spawnEntity("trickymaze:patroller_zombie", pos);
+    }
+    catch (err) {
+        console.warn(`[TrickyMaze] smoke: spawnEntity failed: ${String(err)}`);
+        return;
+    }
+    if (!e) {
+        console.warn("[TrickyMaze] smoke: spawnEntity returned undefined.");
+        return;
+    }
+    e.setDynamicProperty("trickymaze:behavior", "patroller");
+    e.setDynamicProperty("trickymaze:home_x", pos.x);
+    e.setDynamicProperty("trickymaze:home_y", pos.y);
+    e.setDynamicProperty("trickymaze:home_z", pos.z);
+    e.setDynamicProperty("trickymaze:patrol_axis", "E");
+    e.setDynamicProperty("trickymaze:patrol_length", 12);
+    e.setDynamicProperty("trickymaze:damage_mult", 1);
+    system.runTimeout(() => {
+        const n = dim.getEntities({ families: ["trickymaze_patroller"] }).length;
+        const msg = n >= 1 ? "§aPASS" : "§cFAIL";
+        world.sendMessage(`${msg} §7smoke_monsters (patroller count: ${n})`);
+        console.warn(`[TrickyMaze] smoke_monsters patroller count: ${n}`);
+        try {
+            e.remove();
+        }
+        catch { /* ignore */ }
+    }, 10);
+}

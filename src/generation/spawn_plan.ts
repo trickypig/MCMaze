@@ -1,11 +1,12 @@
 import type { Cell, Coord, Maze } from "./maze";
-import { type Behavior, type Theme, themeForFloor } from "../monsters/themes";
+import { themeForFloor, type ThemeId } from "./themes";
+import type { Behavior } from "../monsters/identifiers";
 
 export type Axis = "N" | "S" | "E" | "W";
 
 export type SpawnManifestEntry = {
   behavior: Behavior;
-  theme: Theme;
+  theme: ThemeId;
   pos: { x: number; y: number; z: number };
   config: {
     homePoint: { x: number; y: number; z: number };
@@ -77,7 +78,7 @@ function shuffleInPlace<T>(arr: T[], rng: () => number): void {
   }
 }
 
-function runToEntry(run: StraightRun, theme: Theme): SpawnManifestEntry {
+function runToEntry(run: StraightRun, theme: ThemeId): SpawnManifestEntry {
   const mid = run.cells[Math.floor(run.cells.length / 2)];
   const cx = mid.x * 3 + 2;
   const cz = mid.y * 3 + 2;
@@ -100,7 +101,7 @@ export function buildSpawnManifest(
   floor: number,
   rng: () => number,
 ): SpawnManifestEntry[] {
-  const theme = themeForFloor(floor);
+  const theme = themeForFloor(floor).id;
   const runs = findStraightRuns(maze).filter(
     (r) =>
       !containsCoord(r.cells, maze.entrance) &&

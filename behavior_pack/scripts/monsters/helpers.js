@@ -1,0 +1,87 @@
+import { world } from "@minecraft/server";
+export function nearestPlayer(entity, maxDist) {
+    const dim = entity.dimension;
+    const players = dim.getPlayers({
+        location: entity.location,
+        maxDistance: maxDist,
+    });
+    if (players.length === 0)
+        return undefined;
+    let best;
+    let bestSq = Infinity;
+    for (const p of players) {
+        const dx = p.location.x - entity.location.x;
+        const dy = p.location.y - entity.location.y;
+        const dz = p.location.z - entity.location.z;
+        const sq = dx * dx + dy * dy + dz * dz;
+        if (sq < bestSq) {
+            bestSq = sq;
+            best = p;
+        }
+    }
+    return best;
+}
+export function isInFrontOf(entity, target, arcDeg) {
+    const view = entity.getViewDirection();
+    const dx = target.location.x - entity.location.x;
+    const dz = target.location.z - entity.location.z;
+    const len = Math.hypot(dx, dz);
+    if (len < 0.001)
+        return true;
+    const ux = dx / len;
+    const uz = dz / len;
+    // Flatten entity view direction onto XZ.
+    const vlen = Math.hypot(view.x, view.z);
+    if (vlen < 0.001)
+        return false;
+    const vx = view.x / vlen;
+    const vz = view.z / vlen;
+    const dot = ux * vx + uz * vz;
+    const threshold = Math.cos((arcDeg / 2) * (Math.PI / 180));
+    return dot >= threshold;
+}
+export function hasLineOfSight(entity, target) {
+    // Raise origin by ~1.5 to approximate eye height.
+    const origin = {
+        x: entity.location.x,
+        y: entity.location.y + 1.5,
+        z: entity.location.z,
+    };
+    const tx = target.location.x - origin.x;
+    const ty = target.location.y - origin.y;
+    const tz = target.location.z - origin.z;
+    const targetDist = Math.hypot(tx, ty, tz);
+    if (targetDist < 0.001)
+        return true;
+    const direction = {
+        x: tx / targetDist,
+        y: ty / targetDist,
+        z: tz / targetDist,
+    };
+    const hit = entity.dimension.getBlockFromRay(origin, direction, { maxDistance: 6 });
+    if (!hit)
+        return true;
+    const bx = hit.block.location.x - origin.x;
+    const by = hit.block.location.y - origin.y;
+    const bz = hit.block.location.z - origin.z;
+    const blockDist = Math.hypot(bx, by, bz);
+    return targetDist <= blockDist;
+}
+export function faceToward(entity, target) {
+    const dx = target.x - entity.location.x;
+    const dz = target.z - entity.location.z;
+    const yaw = (Math.atan2(-dx, dz) * 180) / Math.PI;
+    entity.setRotation({ x: 0, y: yaw });
+}
+export function axisVector(axis) {
+    switch (axis) {
+        case "N": return { x: 0, y: 0, z: -1 };
+        case "S": return { x: 0, y: 0, z: 1 };
+        case "E": return { x: 1, y: 0, z: 0 };
+        case "W": return { x: -1, y: 0, z: 0 };
+    }
+}
+// Unused `world` re-export placeholder so that future helpers needing the
+// world reference don't need a separate import in callers. Keep the import
+// in case TS tree-shakes; see commits for context.
+export { world };
