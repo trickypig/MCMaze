@@ -4,6 +4,8 @@ import { RunPhase, RunState } from "./state/run";
 import { handleFirstJoin, prisonSpec } from "./events/first_join";
 import { handlePressurePlate } from "./events/pressure_plate";
 import { registerDeathHandlers } from "./events/death";
+import { initMonsters } from "./monsters";
+import { startHud } from "./ui/hud";
 
 // Hydrated on the first system tick — world.getDynamicProperty is forbidden
 // during early execution, so top-level calls crash with a ReferenceError.
@@ -16,6 +18,8 @@ export function commitState(): void {
 system.run(() => {
   runState = loadRunState();
   registerDeathHandlers(runState);
+  initMonsters();
+  startHud(runState);
   console.warn(`[TrickyMaze] Initialized. phase=${runState.phase} floor=${runState.floor}`);
 
   world.afterEvents.playerSpawn.subscribe((ev) => {
