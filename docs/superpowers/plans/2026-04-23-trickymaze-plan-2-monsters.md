@@ -358,12 +358,15 @@ Append to `tests/spawn_plan.test.ts`:
 ```ts
 describe("buildSpawnManifest — straight runs", () => {
   it("detects a single N-S run and emits one patroller entry", () => {
-    // 6-cell N-S corridor → eligible (≥ 4), but entrance(0,0) and exit(0,5)
-    // are excluded from runs containing them, so this specific corridor
-    // yields zero entries (the one run contains both endpoints).
+    // 6-cell N-S corridor → interior cells (y=1..4) form a 4-cell run
+    // that excludes entrance(0,0) and exit(0,5). One patroller is emitted.
     const maze = straightCorridorMaze(6);
     const manifest = buildSpawnManifest(maze, 1, mulberry32(42));
-    expect(manifest).toEqual([]);
+    expect(manifest.length).toBe(1);
+    expect(manifest[0].behavior).toBe("patroller");
+    expect(manifest[0].theme).toBe("old_prison");
+    expect(["N", "S"]).toContain(manifest[0].config.patrolAxis);
+    expect(manifest[0].config.patrolLength).toBe(12);
   });
 
   it("emits a patroller when a run excludes entrance and exit", () => {
