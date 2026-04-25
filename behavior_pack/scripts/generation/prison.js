@@ -38,11 +38,18 @@ export function buildPrison(anchor) {
         max: { x: doorX, y: a.y + 2, z: doorZ },
         block: "minecraft:air",
     });
-    // Place iron door (lower half). Upper half auto-placed by Bedrock.
+    // Bedrock does not auto-place the upper half — set both with explicit states.
     ops.push({
         min: { x: doorX, y: a.y + 1, z: doorZ },
         max: { x: doorX, y: a.y + 1, z: doorZ },
         block: "minecraft:iron_door",
+        blockStates: { direction: 3, open_bit: false, upper_block_bit: false },
+    });
+    ops.push({
+        min: { x: doorX, y: a.y + 2, z: doorZ },
+        max: { x: doorX, y: a.y + 2, z: doorZ },
+        block: "minecraft:iron_door",
+        blockStates: { direction: 3, open_bit: false, upper_block_bit: true, door_hinge_bit: false },
     });
     // Pressure plate one block inside the door.
     const plateX = a.x + 3;
@@ -52,6 +59,13 @@ export function buildPrison(anchor) {
         min: { x: plateX, y: plateY, z: plateZ },
         max: { x: plateX, y: plateY, z: plateZ },
         block: "minecraft:heavy_weighted_pressure_plate",
+    });
+    // One dim light block in the ceiling center so the cell isn't pitch black.
+    ops.push({
+        min: { x: a.x + 3, y: a.y + 3, z: a.z + 3 },
+        max: { x: a.x + 3, y: a.y + 3, z: a.z + 3 },
+        block: "minecraft:light_block",
+        blockStates: { block_light_level: 7 },
     });
     // Spawn in center of room, facing north.
     const spawnPos = { x: a.x + 3, y: a.y + 1, z: a.z + 3 };

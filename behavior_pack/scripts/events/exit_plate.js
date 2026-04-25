@@ -1,12 +1,12 @@
-import { world, system } from "@minecraft/server";
+import { world, system, Player } from "@minecraft/server";
 import { RunPhase } from "../state/run";
 import { activeFloor } from "./pressure_plate";
 import { playerHasKey, consumeKey } from "./key_inventory";
 import { beginDescent, isDescentInFlight } from "./descent";
-const NO_KEY_MSG_COOLDOWN_TICKS = 20; // 1 second
+const NO_KEY_MSG_COOLDOWN_TICKS = 20;
 const noKeyMsgByPlayer = new Map();
-export function registerExitPlatePoll(state) {
-    system.runInterval(() => {
+export function registerExitPlateHandler(state) {
+    world.afterEvents.pressurePlatePush.subscribe((ev) => {
         if (state.phase !== RunPhase.FloorActive)
             return;
         if (isDescentInFlight())
@@ -14,24 +14,21 @@ export function registerExitPlatePoll(state) {
         if (!activeFloor)
             return;
         const plate = activeFloor.fixtures.exitPlatePos;
-        for (const p of world.getAllPlayers()) {
-            if (!state.isAlive(p.id))
-                continue;
-            const loc = p.location;
-            if (Math.floor(loc.x) !== plate.x ||
-                Math.floor(loc.y) !== plate.y ||
-                Math.floor(loc.z) !== plate.z) {
-                continue;
-            }
-            if (playerHasKey(p)) {
-                handleKeyedStep(state, p);
-                return; // only one trigger per tick
-            }
-            else {
-                maybeSendNoKeyMessage(p);
-            }
+        const loc = ev.block.location;
+        if (loc.x !== plate.x || loc.y !== plate.y || loc.z !== plate.z)
+            return;
+        const src = ev.source;
+        if (!(src instanceof Player))
+            return;
+        if (!state.isAlive(src.id))
+            return;
+        if (playerHasKey(src)) {
+            handleKeyedStep(state, src);
         }
-    }, 20);
+        else {
+            maybeSendNoKeyMessage(src);
+        }
+    });
 }
 function handleKeyedStep(state, player) {
     consumeKey(player);
@@ -43,7 +40,6 @@ function openExitDoor() {
         return;
     const doorPos = activeFloor.fixtures.exitDoorPos;
     const dim = world.getDimension("overworld");
-    // Place a redstone block directly below the door to open it.
     dim.runCommand(`setblock ${doorPos.x} ${doorPos.y - 1} ${doorPos.z} minecraft:redstone_block`);
 }
 function maybeSendNoKeyMessage(player) {

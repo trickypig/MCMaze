@@ -1,4 +1,4 @@
-import { pickChestCell } from "./chest_placement";
+import { allocateChests } from "./chest_placement";
 /**
  * Compute fixture positions (door, plate, chest) for a generated maze floor
  * and return the FillOps needed to place them. The `buildFloor` operations
@@ -12,7 +12,7 @@ import { pickChestCell } from "./chest_placement";
  * after the key is consumed — at build time we place the door closed and a
  * non-redstone block below).
  */
-export function buildFixtures(maze, floor, anchor) {
+export function buildFixtures(maze, floor, anchor, rng) {
     const doorCell = maze.exit;
     const doorPos = cellCenter(doorCell, anchor);
     // Find the single open neighbor of the exit cell; plate goes toward it.
@@ -34,8 +34,10 @@ export function buildFixtures(maze, floor, anchor) {
         y: doorPos.y,
         z: doorPos.z + Math.sign(openNeighborOffset.dz),
     };
-    const chestCell = pickChestCell(maze);
-    const chestPos = cellCenter(chestCell, anchor);
+    const allocation = allocateChests(maze, rng);
+    const chestPos = cellCenter(allocation.keyCell, anchor);
+    const armoryChestPositions = allocation.armoryCells.map((c) => cellCenter(c, anchor));
+    const supplyChestPositions = allocation.supplyCells.map((c) => cellCenter(c, anchor));
     const ops = [
         // Clear the door cell's air column (in case carver left walls).
         {
@@ -43,11 +45,18 @@ export function buildFixtures(maze, floor, anchor) {
             max: { x: doorPos.x, y: doorPos.y + 1, z: doorPos.z },
             block: "minecraft:air",
         },
-        // Iron door (lower half). Upper half auto-placed by Bedrock.
+        // Iron door — both halves placed closed. Bedrock does not auto-place the upper half.
         {
             min: { x: doorPos.x, y: doorPos.y, z: doorPos.z },
             max: { x: doorPos.x, y: doorPos.y, z: doorPos.z },
             block: "minecraft:iron_door",
+            blockStates: { direction: 0, open_bit: false, upper_block_bit: false },
+        },
+        {
+            min: { x: doorPos.x, y: doorPos.y + 1, z: doorPos.z },
+            max: { x: doorPos.x, y: doorPos.y + 1, z: doorPos.z },
+            block: "minecraft:iron_door",
+            blockStates: { direction: 0, open_bit: false, upper_block_bit: true, door_hinge_bit: false },
         },
         // Pressure plate one block away toward the passage.
         {
@@ -55,17 +64,44 @@ export function buildFixtures(maze, floor, anchor) {
             max: { x: platePos.x, y: platePos.y, z: platePos.z },
             block: "minecraft:stone_pressure_plate",
         },
-        // Chest at the chosen dead-end cell's center.
+        // Key chest at the farthest dead-end.
         {
             min: { x: chestPos.x, y: chestPos.y, z: chestPos.z },
             max: { x: chestPos.x, y: chestPos.y, z: chestPos.z },
             block: "minecraft:chest",
         },
     ];
+    // Entrance marker: two-block ladder hung on the inside face of the entrance
+    // cell's north wall — runs from walkable height up into the ceiling so it
+    // reads as descending from above.
+    const entrance = floor.entranceBlock;
+    const ladderPos = { x: entrance.x, y: entrance.y + 1, z: entrance.z - 1 };
+    ops.push({
+        min: { x: ladderPos.x, y: ladderPos.y, z: ladderPos.z },
+        max: { x: ladderPos.x, y: ladderPos.y + 1, z: ladderPos.z },
+        block: "minecraft:ladder",
+        blockStates: { facing_direction: 3 },
+    });
+    for (const p of armoryChestPositions) {
+        ops.push({
+            min: { x: p.x, y: p.y, z: p.z },
+            max: { x: p.x, y: p.y, z: p.z },
+            block: "minecraft:chest",
+        });
+    }
+    for (const p of supplyChestPositions) {
+        ops.push({
+            min: { x: p.x, y: p.y, z: p.z },
+            max: { x: p.x, y: p.y, z: p.z },
+            block: "minecraft:chest",
+        });
+    }
     return {
         exitDoorPos: doorPos,
         exitPlatePos: platePos,
         chestPos,
+        armoryChestPositions,
+        supplyChestPositions,
         operations: ops,
     };
 }

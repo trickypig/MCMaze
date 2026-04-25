@@ -96,6 +96,24 @@ function runToEntry(run: StraightRun, theme: ThemeId): SpawnManifestEntry {
   };
 }
 
+function sleeperEntry(cell: Coord, theme: ThemeId): SpawnManifestEntry {
+  const cx = cell.x * 3 + 2;
+  const cz = cell.y * 3 + 2;
+  const cy = 1;
+  return {
+    behavior: "sleeper",
+    theme,
+    pos: { x: cx, y: cy, z: cz },
+    config: {
+      homePoint: { x: cx, y: cy, z: cz },
+      patrolAxis: "N", // unused by sleeper, retained for type compatibility
+      patrolLength: 0,
+    },
+  };
+}
+
+function coordKey(c: Coord): string { return `${c.x},${c.y}`; }
+
 export function buildSpawnManifest(
   maze: Maze,
   floor: number,
@@ -108,15 +126,37 @@ export function buildSpawnManifest(
       !containsCoord(r.cells, maze.exit),
   );
 
-  if (runs.length === 0) return [];
-
   const W = maze.cells.length;
   const H = maze.cells[0].length;
   const totalCells = W * H;
-  const target = Math.max(1, Math.floor(totalCells / 12));
+  const patrolTarget = Math.max(1, Math.floor(totalCells / 12));
 
   shuffleInPlace(runs, rng);
+  const chosenRuns = runs.slice(0, patrolTarget);
+  const out: SpawnManifestEntry[] = chosenRuns.map((run) => runToEntry(run, theme));
 
-  const chosen = runs.slice(0, target);
-  return chosen.map((run) => runToEntry(run, theme));
+  // Sleepers: floor 2+. Place in cells not occupied by entrance, exit, or
+  // a chosen patrol run. (Chest cells aren't excluded yet — visual overlap
+  // is rare and benign for now.)
+  if (floor >= 2) {
+    const taken = new Set<string>();
+    taken.add(coordKey(maze.entrance));
+    taken.add(coordKey(maze.exit));
+    for (const r of chosenRuns) for (const c of r.cells) taken.add(coordKey(c));
+
+    const candidates: Coord[] = [];
+    for (let x = 0; x < W; x++) {
+      for (let y = 0; y < H; y++) {
+        const c = { x, y };
+        if (!taken.has(coordKey(c))) candidates.push(c);
+      }
+    }
+    shuffleInPlace(candidates, rng);
+    const sleeperTarget = Math.max(1, Math.floor(totalCells / 24));
+    for (const c of candidates.slice(0, sleeperTarget)) {
+      out.push(sleeperEntry(c, theme));
+    }
+  }
+
+  return out;
 }

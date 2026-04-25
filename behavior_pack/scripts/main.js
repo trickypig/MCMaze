@@ -1,10 +1,10 @@
-import { world, system } from "@minecraft/server";
+import { world, system, GameMode, Player } from "@minecraft/server";
 import { loadRunState, saveRunState } from "./state/persistence";
 import { RunPhase } from "./state/run";
-import { handleFirstJoin, prisonSpec } from "./events/first_join";
-import { handlePressurePlate, setActiveFloor } from "./events/pressure_plate";
+import { handleFirstJoin, getPrisonSpec, rehydratePrisonSpec } from "./events/first_join";
+import { handlePressurePlate, setActiveFloor, getActiveFloor } from "./events/pressure_plate";
 import { registerDeathHandlers } from "./events/death";
-import { registerExitPlatePoll } from "./events/exit_plate";
+import { registerExitPlateHandler } from "./events/exit_plate";
 import { initMonsters } from "./monsters/index";
 import { startHud } from "./ui/hud";
 // Hydrated on the first system tick — world.getDynamicProperty is forbidden
@@ -16,7 +16,7 @@ export function commitState() {
 system.run(() => {
     runState = loadRunState();
     registerDeathHandlers(runState);
-    registerExitPlatePoll(runState);
+    registerExitPlateHandler(runState);
     initMonsters();
     startHud(runState);
     console.warn(`[TrickyMaze v1.2] Initialized. phase=${runState.phase} floor=${runState.floor} ` +
@@ -31,17 +31,19 @@ system.run(() => {
             return;
         }
         if (phase === RunPhase.GameOver) {
-            // Dead screen visible — don't rebuild, don't restore. Wait for restart scriptevent.
+            // Player hit Respawn after Run Failed — reset the run and rebuild the prison.
+            handleRestart();
             return;
         }
         if (phase === RunPhase.Prison || phase === RunPhase.FloorActive) {
-            if (!runState.isAlive(ev.player.id) && !runState.isDead(ev.player.id)) {
+            const wasKnown = runState.isAlive(ev.player.id) || runState.isDead(ev.player.id);
+            if (!wasKnown) {
                 runState.markAlive(ev.player.id);
                 commitState();
             }
-            if (!ev.initialSpawn)
+            if (!ev.initialSpawn || wasKnown)
                 return;
-            console.warn(`[TrickyMaze] Mid-run join by ${ev.player.name} — tolerated, not teleported.`);
+            teleportMidRunJoiner(ev.player);
         }
     });
     // One-shot rehydration for players already connected at script init
@@ -52,22 +54,26 @@ system.run(() => {
         }
         commitState();
     }
-    system.runInterval(() => {
+    // Script-reload recovery: prisonSpec is module-local and vanishes on reload.
+    // Without this the prison plate poll sees prisonSpec=null and does nothing.
+    if (runState.phase === RunPhase.Prison) {
+        rehydratePrisonSpec();
+    }
+    world.afterEvents.pressurePlatePush.subscribe((ev) => {
         if (runState.phase !== RunPhase.Prison)
             return;
-        if (!prisonSpec)
+        const spec = getPrisonSpec();
+        if (!spec)
             return;
-        const plate = prisonSpec.pressurePlatePos;
-        for (const p of world.getAllPlayers()) {
-            const loc = p.location;
-            if (Math.floor(loc.x) === plate.x &&
-                Math.floor(loc.y) === plate.y &&
-                Math.floor(loc.z) === plate.z) {
-                handlePressurePlate(runState);
-                break;
-            }
-        }
-    }, 20);
+        const loc = ev.block.location;
+        const plate = spec.pressurePlatePos;
+        if (loc.x !== plate.x || loc.y !== plate.y || loc.z !== plate.z)
+            return;
+        const src = ev.source;
+        const who = src instanceof Player ? src.name : "entity";
+        console.warn(`[TrickyMaze] Prison plate pushed by ${who}`);
+        handlePressurePlate(runState);
+    });
 });
 system.afterEvents.scriptEventReceive.subscribe((ev) => {
     if (ev.id === "trickymaze:shutdown") {
@@ -77,11 +83,6 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
         return;
     }
     if (ev.id === "trickymaze:restart") {
-        if (runState.phase !== RunPhase.GameOver) {
-            console.warn(`[TrickyMaze] restart ignored — phase is ${runState.phase}`);
-            world.sendMessage("§cRestart can only be used after a Run Failed screen.");
-            return;
-        }
         handleRestart();
         return;
     }
@@ -90,8 +91,28 @@ system.afterEvents.scriptEventReceive.subscribe((ev) => {
         return;
     }
 });
+function teleportMidRunJoiner(player) {
+    const dim = world.getDimension("overworld");
+    const af = getActiveFloor();
+    if (runState.phase === RunPhase.FloorActive && af) {
+        // Entrance is always cell (0,0); center = anchor + (2, 1, 2).
+        const a = af.anchor;
+        player.teleport({ x: a.x + 2.5, y: a.y + 1, z: a.z + 2.5 }, { dimension: dim });
+        player.setGameMode(GameMode.Adventure);
+        console.warn(`[TrickyMaze] Mid-run joiner ${player.name} dropped at floor ${af.floor} entrance.`);
+        world.sendMessage(`§e${player.name} joined at floor ${af.floor}.`);
+        return;
+    }
+    const spec = getPrisonSpec();
+    if (runState.phase === RunPhase.Prison && spec) {
+        player.teleport(spec.spawnPos, { dimension: dim });
+        player.setGameMode(GameMode.Adventure);
+        console.warn(`[TrickyMaze] Mid-run joiner ${player.name} dropped in prison.`);
+        world.sendMessage(`§e${player.name} joined in the prison.`);
+    }
+}
 function handleRestart() {
-    console.warn("[TrickyMaze] Restart scriptevent — resetting run.");
+    console.warn(`[TrickyMaze] Restart — resetting run from phase=${runState.phase}`);
     const dim = world.getDimension("overworld");
     for (const name of runState.trackedTickingAreas) {
         try {
@@ -99,10 +120,18 @@ function handleRestart() {
         }
         catch { /* ignore */ }
     }
+    // Respawn spectators to Adventure so handleFirstJoin can teleport them cleanly.
+    for (const p of world.getAllPlayers()) {
+        try {
+            p.setGameMode(GameMode.Adventure);
+        }
+        catch { /* ignore */ }
+    }
     setActiveFloor(null);
     runState.resetToIdle();
     commitState();
-    world.sendMessage("§aRun reset. Respawn or relog to begin a new run.");
+    world.sendMessage("§aRun reset. Building a new prison…");
+    handleFirstJoin(runState);
 }
 function runSmokeMonsters() {
     const dim = world.getDimension("overworld");

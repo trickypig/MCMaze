@@ -114,6 +114,27 @@ describe("buildSpawnManifest — straight runs", () => {
   });
 });
 
+describe("buildSpawnManifest — sleeper progression", () => {
+  it("does not emit sleepers on floor 1", () => {
+    const maze = generateMaze(12, 12, mulberry32(11));
+    const manifest = buildSpawnManifest(maze, 1, mulberry32(22));
+    expect(manifest.every((e) => e.behavior !== "sleeper")).toBe(true);
+  });
+
+  it("emits sleepers starting on floor 2 (avoiding entrance/exit)", () => {
+    const maze = generateMaze(12, 12, mulberry32(11));
+    const manifest = buildSpawnManifest(maze, 2, mulberry32(22));
+    const sleepers = manifest.filter((e) => e.behavior === "sleeper");
+    expect(sleepers.length).toBeGreaterThan(0);
+    for (const s of sleepers) {
+      const cellX = Math.floor((s.pos.x - 2) / 3);
+      const cellY = Math.floor((s.pos.z - 2) / 3);
+      expect({ x: cellX, y: cellY }).not.toEqual(maze.entrance);
+      expect({ x: cellX, y: cellY }).not.toEqual(maze.exit);
+    }
+  });
+});
+
 describe("buildSpawnManifest — real maze density", () => {
   it("produces entries on a 12×12 L1 maze", () => {
     const maze = generateMaze(12, 12, mulberry32(123));

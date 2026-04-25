@@ -1,6 +1,18 @@
 import { system, world } from "@minecraft/server";
 import { RunPhase } from "../state/run";
+import { KEY_ITEM_TYPE } from "../generation/key_item";
 const HUD_INTERVAL_TICKS = 20; // 1 Hz
+function playerHasKey(p) {
+    const inv = p.getComponent("minecraft:inventory")?.container;
+    if (!inv)
+        return false;
+    for (let i = 0; i < inv.size; i++) {
+        const stack = inv.getItem(i);
+        if (stack && stack.typeId === KEY_ITEM_TYPE)
+            return true;
+    }
+    return false;
+}
 export function startHud(state) {
     system.runInterval(() => {
         if (state.phase !== RunPhase.FloorActive)
@@ -13,11 +25,11 @@ export function startHud(state) {
         catch {
             mobCount = 0;
         }
-        const keyLabel = "not found"; // Plan 3 will flip to "FOUND" on pickup.
-        const msg = `§eFloor ${state.floor}§r · §bKey:§r ${keyLabel} · §cMobs:§r ${mobCount}`;
         for (const p of world.getAllPlayers()) {
             if (!state.isAlive(p.id))
                 continue;
+            const keyLabel = playerHasKey(p) ? "§aFOUND" : "not found";
+            const msg = `§eFloor ${state.floor}§r · §bKey:§r ${keyLabel}§r · §cMobs:§r ${mobCount}`;
             try {
                 p.onScreenDisplay.setActionBar(msg);
             }

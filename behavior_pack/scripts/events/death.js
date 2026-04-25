@@ -2,7 +2,7 @@ import { world, GameMode, Player, system } from "@minecraft/server";
 import { RunPhase } from "../state/run";
 import { commitState } from "../main";
 import { activeFloor } from "./pressure_plate";
-import { prisonSpec } from "./first_join";
+import { getPrisonSpec } from "./first_join";
 export function registerDeathHandlers(state) {
     world.afterEvents.entityDie.subscribe((ev) => {
         const entity = ev.deadEntity;
@@ -65,8 +65,9 @@ function teleportDeadPlayerToOverview(p) {
         p.teleport(center, { dimension: dim });
         return;
     }
-    if (prisonSpec) {
-        p.teleport({ x: prisonSpec.spawnPos.x, y: prisonSpec.spawnPos.y + 5, z: prisonSpec.spawnPos.z }, { dimension: dim });
+    const spec = getPrisonSpec();
+    if (spec) {
+        p.teleport({ x: spec.spawnPos.x, y: spec.spawnPos.y + 5, z: spec.spawnPos.z }, { dimension: dim });
     }
 }
 function triggerGameOver(state) {

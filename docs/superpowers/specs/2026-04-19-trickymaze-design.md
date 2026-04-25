@@ -297,7 +297,7 @@ Entity JSON is stripped to the minimum:
 |---------------|-----------------|-----------------|--------------------|-----------------------|
 | Patroller     | zombie          | husk            | piglin             | wither patroller      |
 | Sentry Archer | skeleton        | stray           | piglin + crossbow  | blaze                 |
-| Sleeper       | spider          | vindicator      | piglin brute       | wither sleeper        |
+| Sleeper       | zombie villager | vindicator      | piglin brute       | wither sleeper        |
 | Stalker       | enderman-ish    | enderman-ish    | enderman-ish       | enderman-ish          |
 | Lurker        | zombie villager | drowned         | zombified piglin   | wither lurker         |
 | Charger       | —               | —               | hoglin             | hoglin                |
@@ -311,10 +311,10 @@ floor's theme.
 | Floor | Unlocked behaviors                                    |
 |-------|-------------------------------------------------------|
 | 1     | Patroller                                             |
-| 2     | + Sentry Archer                                       |
-| 3     | + Sleeper                                             |
-| 4     | + Stalker, + Charger                                  |
-| 5     | + Lurker                                              |
+| 2     | + Sleeper                                             |
+| 3     | + Sentry Archer                                       |
+| 4     | + Lurker                                              |
+| 5     | + Stalker, + Charger                                  |
 | 6+    | + Executioner (1 per floor)                           |
 
 Spawn density: ~1 monster per 12 cells on L1 (≈ 12 mobs), scaling linearly to

@@ -20,7 +20,9 @@ export class RunState {
         this.currentFloor = 0;
     }
     startFloor(n) {
-        if (this.phase !== RunPhase.Prison && this.phase !== RunPhase.FloorActive) {
+        if (this.phase !== RunPhase.Prison &&
+            this.phase !== RunPhase.FloorActive &&
+            this.phase !== RunPhase.Descending) {
             throw new Error(`Cannot startFloor from ${this.phase}`);
         }
         this.floor = n;

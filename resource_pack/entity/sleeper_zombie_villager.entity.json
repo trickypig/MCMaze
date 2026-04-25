@@ -1,0 +1,13 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "trickymaze:sleeper_zombie_villager",
+      "materials": { "default": "zombie_villager_v2" },
+      "textures": { "default": "textures/entity/zombie_villager2/zombie_villager" },
+      "geometry": { "default": "geometry.zombie_villager_v2" },
+      "render_controllers": ["controller.render.zombie_villager_v2"],
+      "spawn_egg": { "base_color": "#563012", "overlay_color": "#799c65" }
+    }
+  }
+}
