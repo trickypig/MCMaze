@@ -4,9 +4,18 @@ import type { FillOp, Vec3 } from "./floor";
 const MAX_VOLUME = 32_768;
 const CHUNK_SIZE = 30; // 30^3 = 27,000 < 32,768
 
+const WORLD_MIN_Y = -64;
+const WORLD_MAX_Y = 320;
+
 export function applyOps(ops: FillOp[]): void {
   const dim = world.getDimension("overworld");
   for (const op of ops) {
+    if (op.min.y < WORLD_MIN_Y || op.max.y > WORLD_MAX_Y) {
+      console.warn(
+        `[TrickyMaze] Skipping op at y=${op.min.y}..${op.max.y} — outside world bounds [${WORLD_MIN_Y}, ${WORLD_MAX_Y}]`,
+      );
+      continue;
+    }
     applySingleOp(op, dim);
   }
 }
@@ -21,7 +30,7 @@ function applySingleOp(
     (op.max.z - op.min.z + 1);
 
   if (volume <= MAX_VOLUME) {
-    fillOnce(dim, op.min, op.max, op.block);
+    fillOnce(dim, op.min, op.max, op.block, op.blockStates);
     return;
   }
 
@@ -35,7 +44,7 @@ function applySingleOp(
           y: Math.min(y + CHUNK_SIZE - 1, op.max.y),
           z: Math.min(z + CHUNK_SIZE - 1, op.max.z),
         };
-        fillOnce(dim, cMin, cMax, op.block);
+        fillOnce(dim, cMin, cMax, op.block, op.blockStates);
       }
     }
   }
@@ -46,9 +55,12 @@ function fillOnce(
   min: Vec3,
   max: Vec3,
   blockId: string,
+  blockStates?: Record<string, string | number | boolean>,
 ): void {
   try {
-    const perm = BlockPermutation.resolve(blockId);
+    const perm = blockStates
+      ? BlockPermutation.resolve(blockId, blockStates)
+      : BlockPermutation.resolve(blockId);
     dim.fillBlocks(new BlockVolume(min, max), perm);
   } catch (e) {
     console.warn(

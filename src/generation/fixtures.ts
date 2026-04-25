@@ -1,11 +1,13 @@
 import type { Coord, Maze } from "./maze";
 import type { FillOp, FloorSpec, Vec3 } from "./floor";
-import { pickChestCell } from "./chest_placement";
+import { allocateChests } from "./chest_placement";
 
 export interface FloorFixtures {
   exitDoorPos: Vec3;
   exitPlatePos: Vec3;
   chestPos: Vec3;
+  armoryChestPositions: Vec3[];
+  supplyChestPositions: Vec3[];
   operations: FillOp[];
 }
 
@@ -26,6 +28,7 @@ export function buildFixtures(
   maze: Maze,
   floor: FloorSpec,
   anchor: Vec3,
+  rng: () => number,
 ): FloorFixtures {
   const doorCell = maze.exit;
   const doorPos: Vec3 = cellCenter(doorCell, anchor);
@@ -46,8 +49,10 @@ export function buildFixtures(
     z: doorPos.z + Math.sign(openNeighborOffset.dz),
   };
 
-  const chestCell: Coord = pickChestCell(maze);
-  const chestPos: Vec3 = cellCenter(chestCell, anchor);
+  const allocation = allocateChests(maze, rng);
+  const chestPos: Vec3 = cellCenter(allocation.keyCell, anchor);
+  const armoryChestPositions = allocation.armoryCells.map((c) => cellCenter(c, anchor));
+  const supplyChestPositions = allocation.supplyCells.map((c) => cellCenter(c, anchor));
 
   const ops: FillOp[] = [
     // Clear the door cell's air column (in case carver left walls).
@@ -56,11 +61,18 @@ export function buildFixtures(
       max: { x: doorPos.x, y: doorPos.y + 1, z: doorPos.z },
       block: "minecraft:air",
     },
-    // Iron door (lower half). Upper half auto-placed by Bedrock.
+    // Iron door — both halves placed closed. Bedrock does not auto-place the upper half.
     {
       min: { x: doorPos.x, y: doorPos.y, z: doorPos.z },
       max: { x: doorPos.x, y: doorPos.y, z: doorPos.z },
       block: "minecraft:iron_door",
+      blockStates: { direction: 0, open_bit: false, upper_block_bit: false },
+    },
+    {
+      min: { x: doorPos.x, y: doorPos.y + 1, z: doorPos.z },
+      max: { x: doorPos.x, y: doorPos.y + 1, z: doorPos.z },
+      block: "minecraft:iron_door",
+      blockStates: { direction: 0, open_bit: false, upper_block_bit: true, door_hinge_bit: false },
     },
     // Pressure plate one block away toward the passage.
     {
@@ -68,7 +80,7 @@ export function buildFixtures(
       max: { x: platePos.x, y: platePos.y, z: platePos.z },
       block: "minecraft:stone_pressure_plate",
     },
-    // Chest at the chosen dead-end cell's center.
+    // Key chest at the farthest dead-end.
     {
       min: { x: chestPos.x, y: chestPos.y, z: chestPos.z },
       max: { x: chestPos.x, y: chestPos.y, z: chestPos.z },
@@ -76,10 +88,38 @@ export function buildFixtures(
     },
   ];
 
+  // Entrance marker: ladder hung on the inside face of the entrance cell's
+  // north wall (always a perimeter wall, so always solid).
+  const entrance = floor.entranceBlock;
+  const ladderPos: Vec3 = { x: entrance.x, y: entrance.y + 1, z: entrance.z - 1 };
+  ops.push({
+    min: { x: ladderPos.x, y: ladderPos.y, z: ladderPos.z },
+    max: { x: ladderPos.x, y: ladderPos.y, z: ladderPos.z },
+    block: "minecraft:ladder",
+    blockStates: { facing_direction: 3 },
+  });
+
+  for (const p of armoryChestPositions) {
+    ops.push({
+      min: { x: p.x, y: p.y, z: p.z },
+      max: { x: p.x, y: p.y, z: p.z },
+      block: "minecraft:chest",
+    });
+  }
+  for (const p of supplyChestPositions) {
+    ops.push({
+      min: { x: p.x, y: p.y, z: p.z },
+      max: { x: p.x, y: p.y, z: p.z },
+      block: "minecraft:chest",
+    });
+  }
+
   return {
     exitDoorPos: doorPos,
     exitPlatePos: platePos,
     chestPos,
+    armoryChestPositions,
+    supplyChestPositions,
     operations: ops,
   };
 }

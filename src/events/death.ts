@@ -2,7 +2,7 @@ import { world, GameMode, Player, system } from "@minecraft/server";
 import { RunPhase, type RunState } from "../state/run";
 import { commitState } from "../main";
 import { activeFloor } from "./pressure_plate";
-import { prisonSpec } from "./first_join";
+import { getPrisonSpec } from "./first_join";
 
 export function registerDeathHandlers(state: RunState): void {
   world.afterEvents.entityDie.subscribe((ev) => {
@@ -65,9 +65,10 @@ function teleportDeadPlayerToOverview(p: Player): void {
     p.teleport(center, { dimension: dim });
     return;
   }
-  if (prisonSpec) {
+  const spec = getPrisonSpec();
+  if (spec) {
     p.teleport(
-      { x: prisonSpec.spawnPos.x, y: prisonSpec.spawnPos.y + 5, z: prisonSpec.spawnPos.z },
+      { x: spec.spawnPos.x, y: spec.spawnPos.y + 5, z: spec.spawnPos.z },
       { dimension: dim },
     );
   }

@@ -1,5 +1,5 @@
 import { world, GameMode, system, ItemStack } from "@minecraft/server";
-import { ANCHOR, prisonSpec } from "./first_join";
+import { ANCHOR, getPrisonSpec } from "./first_join";
 import { RunPhase, type RunState } from "../state/run";
 import { buildFloor } from "../generation/floor";
 import { generateMaze } from "../generation/maze";
@@ -9,9 +9,10 @@ import { worldSeededRng } from "../generation/rng";
 import { themeForFloor } from "../generation/themes";
 import { buildFixtures } from "../generation/fixtures";
 import { KEY_ITEM_TYPE, KEY_DISPLAY_NAME, KEY_LORE } from "../generation/key_item";
+import { lootTierForFloor } from "../generation/chest_placement";
 import type { FloorFixtures } from "../generation/fixtures";
 
-export const FLOOR_DEPTH = 30;
+export const FLOOR_DEPTH = 10;
 const FLOOR_Y_SPAN_PAD = 5;
 
 export interface ActiveFloor {
@@ -28,9 +29,13 @@ export function setActiveFloor(f: ActiveFloor | null): void {
   activeFloor = f;
 }
 
+export function getActiveFloor(): ActiveFloor | null {
+  return activeFloor;
+}
+
 export function handlePressurePlate(state: RunState): void {
   if (state.phase !== RunPhase.Prison) return;
-  if (!prisonSpec) {
+  if (!getPrisonSpec()) {
     console.warn("[TrickyMaze] Pressure plate pressed but prison not built yet.");
     return;
   }
@@ -63,11 +68,23 @@ export function buildAndEnterFloor(state: RunState, floorNum: number): void {
   });
   applyOps(floorSpec.operations);
 
-  const fixtures = buildFixtures(maze, floorSpec, anchor);
+  const fixtures = buildFixtures(maze, floorSpec, anchor, worldSeededRng(floorNum + 1000));
   applyOps(fixtures.operations);
 
   // Place the key in the chest (runtime-only; not part of fixture ops).
   placeKeyInChest(fixtures.chestPos);
+
+  // Populate loot chests via Bedrock loot tables. Fixture ops already placed
+  // the chest blocks; /loot fills them from the per-tier table.
+  const tier = lootTierForFloor(floorNum);
+  const armoryTable = `trickymaze/armory_t${tier}`;
+  const supplyTable = `trickymaze/supply_t${tier}`;
+  for (const p of fixtures.armoryChestPositions) {
+    fillChestFromLootTable(p, armoryTable);
+  }
+  for (const p of fixtures.supplyChestPositions) {
+    fillChestFromLootTable(p, supplyTable);
+  }
 
   // Register ticking area for this floor so chunks stay resident.
   const tickingAreaName = `tm_floor_${floorNum}`;
@@ -110,9 +127,28 @@ export function buildAndEnterFloor(state: RunState, floorNum: number): void {
   world.sendMessage(`§6You descend into the maze. Floor ${floorNum}.`);
 }
 
+function fillChestFromLootTable(
+  pos: { x: number; y: number; z: number },
+  table: string,
+): void {
+  const dim = world.getDimension("overworld");
+  const cmd = `loot insert ${pos.x} ${pos.y} ${pos.z} loot "${table}"`;
+  try {
+    dim.runCommand(cmd);
+  } catch (e) {
+    console.warn(`[TrickyMaze] loot command failed: '${cmd}' — ${String(e)}`);
+  }
+}
+
 function placeKeyInChest(pos: { x: number; y: number; z: number }): void {
   const dim = world.getDimension("overworld");
-  const block = dim.getBlock(pos);
+  let block;
+  try {
+    block = dim.getBlock(pos);
+  } catch (e) {
+    console.warn(`[TrickyMaze] getBlock failed at ${pos.x},${pos.y},${pos.z}: ${String(e)}`);
+    return;
+  }
   if (!block) {
     console.warn(`[TrickyMaze] Could not place key — chest block not found at ${pos.x},${pos.y},${pos.z}`);
     return;

@@ -13,6 +13,7 @@ export type FillOp = {
   min: Vec3;
   max: Vec3;
   block: string;
+  blockStates?: Record<string, string | number | boolean>;
 };
 
 export type FloorSpec = {
@@ -104,6 +105,21 @@ export function buildFloor(maze: Maze, cfg: FloorConfig): FloorSpec {
     max: { x: a.x + sizeX - 1, y: a.y + 3, z: a.z + sizeZ - 1 },
     block: cfg.wallBlock,
   });
+
+  // Sparse light blocks embedded in the ceiling — dim but navigable.
+  // One light every 4 cells on each axis; block_light_level ~7.
+  for (let cx = 1; cx < W; cx += 2) {
+    for (let cy = 1; cy < H; cy += 2) {
+      const lx = a.x + cx * 3 + 2;
+      const lz = a.z + cy * 3 + 2;
+      ops.push({
+        min: { x: lx, y: a.y + 3, z: lz },
+        max: { x: lx, y: a.y + 3, z: lz },
+        block: "minecraft:light_block",
+        blockStates: { block_light_level: 7 },
+      });
+    }
+  }
 
   // Entrance/exit center coords (on the floor of each cell).
   const entranceBlock: Vec3 = cellCenter(maze.entrance, a);
