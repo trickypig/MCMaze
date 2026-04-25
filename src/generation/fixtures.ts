@@ -88,13 +88,14 @@ export function buildFixtures(
     },
   ];
 
-  // Entrance marker: ladder hung on the inside face of the entrance cell's
-  // north wall (always a perimeter wall, so always solid).
+  // Entrance marker: two-block ladder hung on the inside face of the entrance
+  // cell's north wall — runs from walkable height up into the ceiling so it
+  // reads as descending from above.
   const entrance = floor.entranceBlock;
   const ladderPos: Vec3 = { x: entrance.x, y: entrance.y + 1, z: entrance.z - 1 };
   ops.push({
     min: { x: ladderPos.x, y: ladderPos.y, z: ladderPos.z },
-    max: { x: ladderPos.x, y: ladderPos.y, z: ladderPos.z },
+    max: { x: ladderPos.x, y: ladderPos.y + 1, z: ladderPos.z },
     block: "minecraft:ladder",
     blockStates: { facing_direction: 3 },
   });
