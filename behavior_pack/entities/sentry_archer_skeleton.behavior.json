@@ -1,0 +1,30 @@
+{
+  "format_version": "1.21.0",
+  "minecraft:entity": {
+    "description": {
+      "identifier": "trickymaze:sentry_archer_skeleton",
+      "is_spawnable": false,
+      "is_summonable": true,
+      "is_experimental": false
+    },
+    "components": {
+      "minecraft:type_family": {
+        "family": ["trickymaze", "trickymaze_sentry_archer", "monster", "mob"]
+      },
+      "minecraft:health": { "value": 20, "max": 20 },
+      "minecraft:physics": {},
+      "minecraft:pushable": { "is_pushable": false, "is_pushable_by_piston": false },
+      "minecraft:breathable": { "total_supply": 15, "suffocate_time": 0 },
+      "minecraft:collision_box": { "width": 0.6, "height": 1.99 },
+      "minecraft:movement": { "value": 0.0 },
+      "minecraft:knockback_resistance": { "value": 1.0 },
+      "minecraft:damage_sensor": {
+        "triggers": [
+          { "cause": "fall", "deals_damage": false },
+          { "cause": "suffocation", "deals_damage": false }
+        ]
+      },
+      "minecraft:loot": { "table": "loot_tables/empty.json" }
+    }
+  }
+}

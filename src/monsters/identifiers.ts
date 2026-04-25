@@ -1,6 +1,6 @@
 import type { ThemeId } from "../generation/themes";
 
-export type Behavior = "patroller" | "sleeper" | "lurker";
+export type Behavior = "patroller" | "sleeper" | "lurker" | "sentry_archer";
 
 const IDENTIFIER_TABLE: Record<Behavior, Partial<Record<ThemeId, string>>> = {
   patroller: {
@@ -13,6 +13,10 @@ const IDENTIFIER_TABLE: Record<Behavior, Partial<Record<ThemeId, string>>> = {
   },
   lurker: {
     depths: "trickymaze:lurker_wither_skeleton",
+  },
+  sentry_archer: {
+    old_prison: "trickymaze:sentry_archer_skeleton",
+    depths: "trickymaze:sentry_archer_stray",
   },
 };
 

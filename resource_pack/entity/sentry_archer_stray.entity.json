@@ -1,0 +1,13 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "trickymaze:sentry_archer_stray",
+      "materials": { "default": "skeleton" },
+      "textures": { "default": "textures/entity/skeleton/stray" },
+      "geometry": { "default": "geometry.skeleton" },
+      "render_controllers": ["controller.render.skeleton"],
+      "spawn_egg": { "base_color": "#5e7e84", "overlay_color": "#aabcbf" }
+    }
+  }
+}

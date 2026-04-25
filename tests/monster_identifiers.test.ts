@@ -23,6 +23,14 @@ describe("resolveEntityId", () => {
       "trickymaze:lurker_wither_skeleton",
     );
   });
+  it("returns the skeleton sentry archer for old_prison and stray for depths", () => {
+    expect(resolveEntityId("sentry_archer", "old_prison")).toBe(
+      "trickymaze:sentry_archer_skeleton",
+    );
+    expect(resolveEntityId("sentry_archer", "depths")).toBe(
+      "trickymaze:sentry_archer_stray",
+    );
+  });
   it("throws for unpopulated theme combos", () => {
     expect(() => resolveEntityId("lurker", "old_prison")).toThrow(
       /no entity registered/,

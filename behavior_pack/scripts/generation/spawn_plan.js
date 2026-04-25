@@ -72,17 +72,17 @@ function runToEntry(run, theme) {
         },
     };
 }
-function sleeperEntry(cell, theme) {
+function stationaryEntry(behavior, cell, theme) {
     const cx = cell.x * 3 + 2;
     const cz = cell.y * 3 + 2;
     const cy = 1;
     return {
-        behavior: "sleeper",
+        behavior,
         theme,
         pos: { x: cx, y: cy, z: cz },
         config: {
             homePoint: { x: cx, y: cy, z: cz },
-            patrolAxis: "N", // unused by sleeper, retained for type compatibility
+            patrolAxis: "N", // unused for non-patrollers; retained for type compat
             patrolLength: 0,
         },
     };
@@ -99,28 +99,58 @@ export function buildSpawnManifest(maze, floor, rng) {
     shuffleInPlace(runs, rng);
     const chosenRuns = runs.slice(0, patrolTarget);
     const out = chosenRuns.map((run) => runToEntry(run, theme));
-    // Sleepers: floor 2+. Place in cells not occupied by entrance, exit, or
-    // a chosen patrol run. (Chest cells aren't excluded yet — visual overlap
-    // is rare and benign for now.)
-    if (floor >= 2) {
-        const taken = new Set();
-        taken.add(coordKey(maze.entrance));
-        taken.add(coordKey(maze.exit));
-        for (const r of chosenRuns)
-            for (const c of r.cells)
-                taken.add(coordKey(c));
-        const candidates = [];
+    // Track cells already occupied so later behaviors don't collide.
+    const taken = new Set();
+    taken.add(coordKey(maze.entrance));
+    taken.add(coordKey(maze.exit));
+    for (const r of chosenRuns)
+        for (const c of r.cells)
+            taken.add(coordKey(c));
+    const freeCells = () => {
+        const out = [];
         for (let x = 0; x < W; x++) {
             for (let y = 0; y < H; y++) {
                 const c = { x, y };
                 if (!taken.has(coordKey(c)))
-                    candidates.push(c);
+                    out.push(c);
             }
         }
+        return out;
+    };
+    // Sleepers: floor 2+. Any free cell.
+    if (floor >= 2) {
+        const candidates = freeCells();
         shuffleInPlace(candidates, rng);
         const sleeperTarget = Math.max(1, Math.floor(totalCells / 24));
         for (const c of candidates.slice(0, sleeperTarget)) {
-            out.push(sleeperEntry(c, theme));
+            taken.add(coordKey(c));
+            out.push(stationaryEntry("sleeper", c, theme));
+        }
+    }
+    // Sentry archers: floor 3+. Prefer dead-ends for sightlines; fall back
+    // to free cells if dead-ends are exhausted.
+    if (floor >= 3) {
+        const deadEndPool = maze.deadEnds.filter((c) => !taken.has(coordKey(c)));
+        shuffleInPlace(deadEndPool, rng);
+        const archerTarget = Math.max(1, Math.floor(totalCells / 30));
+        let placed = 0;
+        for (const c of deadEndPool) {
+            if (placed >= archerTarget)
+                break;
+            taken.add(coordKey(c));
+            out.push(stationaryEntry("sentry_archer", c, theme));
+            placed += 1;
+        }
+        if (placed < archerTarget) {
+            const fallback = freeCells();
+            shuffleInPlace(fallback, rng);
+            for (const c of fallback) {
+                if (placed >= archerTarget)
+                    break;
+                taken.add(coordKey(c));
+                out.push(stationaryEntry("sentry_archer", c, theme));
+                placed += 1;
+            }
         }
     }
     return out;

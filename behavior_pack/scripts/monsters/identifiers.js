@@ -10,6 +10,10 @@ const IDENTIFIER_TABLE = {
     lurker: {
         depths: "trickymaze:lurker_wither_skeleton",
     },
+    sentry_archer: {
+        old_prison: "trickymaze:sentry_archer_skeleton",
+        depths: "trickymaze:sentry_archer_stray",
+    },
 };
 export function resolveEntityId(behavior, theme) {
     const id = IDENTIFIER_TABLE[behavior]?.[theme];

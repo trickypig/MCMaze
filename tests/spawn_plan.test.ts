@@ -135,6 +135,22 @@ describe("buildSpawnManifest — sleeper progression", () => {
   });
 });
 
+describe("buildSpawnManifest — sentry archer progression", () => {
+  it("does not emit sentry archers before floor 3", () => {
+    const maze = generateMaze(12, 12, mulberry32(31));
+    for (const f of [1, 2]) {
+      const m = buildSpawnManifest(maze, f, mulberry32(32));
+      expect(m.every((e) => e.behavior !== "sentry_archer")).toBe(true);
+    }
+  });
+
+  it("emits sentry archers from floor 3 onward", () => {
+    const maze = generateMaze(12, 12, mulberry32(31));
+    const m = buildSpawnManifest(maze, 3, mulberry32(33));
+    expect(m.some((e) => e.behavior === "sentry_archer")).toBe(true);
+  });
+});
+
 describe("buildSpawnManifest — real maze density", () => {
   it("produces entries on a 12×12 L1 maze", () => {
     const maze = generateMaze(12, 12, mulberry32(123));
