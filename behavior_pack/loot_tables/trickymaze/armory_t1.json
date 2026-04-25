@@ -1,0 +1,55 @@
+{
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "item", "name": "minecraft:leather_helmet", "weight": 2 },
+        { "type": "item", "name": "minecraft:leather_chestplate", "weight": 2 },
+        { "type": "item", "name": "minecraft:leather_leggings", "weight": 2 },
+        { "type": "item", "name": "minecraft:leather_boots", "weight": 2 },
+        { "type": "item", "name": "minecraft:copper_helmet", "weight": 2 },
+        { "type": "item", "name": "minecraft:copper_chestplate", "weight": 2 },
+        { "type": "item", "name": "minecraft:copper_leggings", "weight": 2 },
+        { "type": "item", "name": "minecraft:copper_boots", "weight": 2 }
+      ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        { "type": "item", "name": "minecraft:stone_sword", "weight": 2 },
+        { "type": "item", "name": "minecraft:copper_spear", "weight": 1 },
+        { "type": "item", "name": "minecraft:wooden_axe", "weight": 2 },
+        { "type": "item", "name": "minecraft:bow", "weight": 1 }
+      ]
+    },
+    {
+      "rolls": { "min": 1, "max": 2 },
+      "entries": [
+        {
+          "type": "item",
+          "name": "minecraft:bread",
+          "weight": 2,
+          "functions": [
+            { "function": "set_count", "count": { "min": 1, "max": 2 } }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "minecraft:arrow",
+          "weight": 2,
+          "functions": [
+            { "function": "set_count", "count": { "min": 4, "max": 8 } }
+          ]
+        },
+        {
+          "type": "item",
+          "name": "minecraft:potato",
+          "weight": 1,
+          "functions": [
+            { "function": "set_count", "count": { "min": 2, "max": 4 } }
+          ]
+        }
+      ]
+    }
+  ]
+}

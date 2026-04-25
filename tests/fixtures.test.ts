@@ -26,7 +26,7 @@ describe("buildFixtures", () => {
       floorBlock: theme.floor,
       ceilingBlock: theme.ceiling,
     });
-    const fx = buildFixtures(maze, floor, anchor);
+    const fx = buildFixtures(maze, floor, anchor, seededRng(999));
     const within = (p: { x: number; y: number; z: number }) =>
       p.x >= floor.bounds.min.x &&
       p.x <= floor.bounds.max.x &&
@@ -46,7 +46,7 @@ describe("buildFixtures", () => {
       floorBlock: "minecraft:cobblestone",
       ceilingBlock: "minecraft:stone_bricks",
     });
-    const fx = buildFixtures(maze, floor, anchor);
+    const fx = buildFixtures(maze, floor, anchor, seededRng(999));
     const dx = Math.abs(fx.exitDoorPos.x - fx.exitPlatePos.x);
     const dz = Math.abs(fx.exitDoorPos.z - fx.exitPlatePos.z);
     expect(dx + dz).toBe(1);
@@ -62,7 +62,7 @@ describe("buildFixtures", () => {
       floorBlock: "minecraft:cobblestone",
       ceilingBlock: "minecraft:stone_bricks",
     });
-    const fx = buildFixtures(maze, floor, anchor);
+    const fx = buildFixtures(maze, floor, anchor, seededRng(999));
     const blocks = fx.operations.map((o) => o.block);
     expect(blocks).toContain("minecraft:iron_door");
     expect(blocks).toContain("minecraft:stone_pressure_plate");
@@ -78,7 +78,7 @@ describe("buildFixtures", () => {
       floorBlock: "minecraft:cobblestone",
       ceilingBlock: "minecraft:stone_bricks",
     });
-    const fx = buildFixtures(maze, floor, anchor);
+    const fx = buildFixtures(maze, floor, anchor, seededRng(999));
     expect(fx.chestPos.y).toBe(anchor.y + 1);
   });
 });

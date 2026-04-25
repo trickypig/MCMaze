@@ -295,11 +295,11 @@ Entity JSON is stripped to the minimum:
 
 | Behavior      | L1–2 Old Prison | L3–4 The Depths | L5–6 Nether's Edge | L7+ The Abyss         |
 |---------------|-----------------|-----------------|--------------------|-----------------------|
-| Patroller     | zombie          | husk            | piglin brute       | wither skeleton       |
-| Sentry Archer | skeleton        | stray           | piglin + crossbow  | wither skeleton + bow |
-| Sleeper       | zombie          | drowned         | piglin             | wither skeleton       |
+| Patroller     | zombie          | husk            | piglin             | wither patroller      |
+| Sentry Archer | skeleton        | stray           | piglin + crossbow  | blaze                 |
+| Sleeper       | spider          | vindicator      | piglin brute       | wither sleeper        |
 | Stalker       | enderman-ish    | enderman-ish    | enderman-ish       | enderman-ish          |
-| Lurker        | zombie          | husk            | piglin             | wither skeleton       |
+| Lurker        | zombie villager | drowned         | zombified piglin   | wither lurker         |
 | Charger       | —               | —               | hoglin             | hoglin                |
 | Executioner   | —               | —               | —                  | wither skeleton       |
 
