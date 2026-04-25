@@ -2,7 +2,7 @@ import { world, system, GameMode, Player } from "@minecraft/server";
 import { loadRunState, saveRunState } from "./state/persistence";
 import { RunPhase } from "./state/run";
 import { handleFirstJoin, getPrisonSpec, rehydratePrisonSpec } from "./events/first_join";
-import { handlePressurePlate, setActiveFloor, getActiveFloor } from "./events/pressure_plate";
+import { handlePressurePlate, setActiveFloor, getActiveFloor, rehydrateActiveFloor } from "./events/pressure_plate";
 import { registerDeathHandlers } from "./events/death";
 import { registerExitPlateHandler } from "./events/exit_plate";
 import { initMonsters } from "./monsters/index";
@@ -58,6 +58,10 @@ system.run(() => {
     // Without this the prison plate poll sees prisonSpec=null and does nothing.
     if (runState.phase === RunPhase.Prison) {
         rehydratePrisonSpec();
+    }
+    if (runState.phase === RunPhase.FloorActive && runState.floor > 0) {
+        rehydrateActiveFloor(runState.floor);
+        console.warn(`[TrickyMaze] Rehydrated activeFloor for floor ${runState.floor}.`);
     }
     world.afterEvents.pressurePlatePush.subscribe((ev) => {
         if (runState.phase !== RunPhase.Prison)

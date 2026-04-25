@@ -21,6 +21,36 @@ export function setActiveFloor(f) {
 export function getActiveFloor() {
     return activeFloor;
 }
+/**
+ * Recompute ActiveFloor without rebuilding blocks. Used on script reload
+ * when the world is already in FloorActive phase — the blocks still exist
+ * but the module-level activeFloor was lost. Same RNG seeds as
+ * buildAndEnterFloor, so fixture positions match exactly.
+ */
+export function rehydrateActiveFloor(floorNum) {
+    const size = Math.min(20, 12 + (floorNum - 1) * 4);
+    const maze = generateMaze(size, size, worldSeededRng(floorNum));
+    const theme = themeForFloor(floorNum);
+    const anchor = {
+        x: ANCHOR.x,
+        y: ANCHOR.y - FLOOR_DEPTH * floorNum,
+        z: ANCHOR.z,
+    };
+    const floorSpec = buildFloor(maze, {
+        anchor,
+        wallBlock: theme.wall,
+        floorBlock: theme.floor,
+        ceilingBlock: theme.ceiling,
+    });
+    const fixtures = buildFixtures(maze, floorSpec, anchor, worldSeededRng(floorNum + 1000));
+    setActiveFloor({
+        floor: floorNum,
+        anchor,
+        fixtures,
+        tickingAreaName: `tm_floor_${floorNum}`,
+        size,
+    });
+}
 export function handlePressurePlate(state) {
     if (state.phase !== RunPhase.Prison)
         return;
