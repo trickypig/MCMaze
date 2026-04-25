@@ -2,7 +2,7 @@
   "format_version": "1.21.0",
   "minecraft:entity": {
     "description": {
-      "identifier": "trickymaze:patroller_wither_skeleton",
+      "identifier": "trickymaze:depths_patroller",
       "is_spawnable": false,
       "is_summonable": true,
       "is_experimental": false

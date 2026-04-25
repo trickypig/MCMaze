@@ -2,12 +2,12 @@
   "format_version": "1.10.0",
   "minecraft:client_entity": {
     "description": {
-      "identifier": "trickymaze:sentry_archer_stray",
+      "identifier": "trickymaze:old_prison_sentry",
       "materials": { "default": "skeleton" },
-      "textures": { "default": "textures/entity/skeleton/stray" },
+      "textures": { "default": "textures/entity/skeleton/skeleton" },
       "geometry": { "default": "geometry.skeleton" },
       "render_controllers": ["controller.render.skeleton"],
-      "spawn_egg": { "base_color": "#5e7e84", "overlay_color": "#aabcbf" }
+      "spawn_egg": { "base_color": "#c1c1c1", "overlay_color": "#494d4d" }
     }
   }
 }

@@ -2,33 +2,33 @@ import { describe, it, expect } from "vitest";
 import { resolveEntityId } from "../src/monsters/identifiers";
 
 describe("resolveEntityId", () => {
-  it("returns the zombie patroller for old_prison", () => {
+  it("returns the old_prison patroller", () => {
     expect(resolveEntityId("patroller", "old_prison")).toBe(
-      "trickymaze:patroller_zombie",
+      "trickymaze:old_prison_patroller",
     );
   });
-  it("returns the zombie villager sleeper for old_prison", () => {
+  it("returns the old_prison sleeper", () => {
     expect(resolveEntityId("sleeper", "old_prison")).toBe(
-      "trickymaze:sleeper_zombie_villager",
+      "trickymaze:old_prison_sleeper",
     );
   });
-  it("returns wither-skeleton variants for depths", () => {
+  it("returns depths variants", () => {
     expect(resolveEntityId("patroller", "depths")).toBe(
-      "trickymaze:patroller_wither_skeleton",
+      "trickymaze:depths_patroller",
     );
     expect(resolveEntityId("sleeper", "depths")).toBe(
-      "trickymaze:sleeper_wither_skeleton",
+      "trickymaze:depths_sleeper",
     );
     expect(resolveEntityId("lurker", "depths")).toBe(
-      "trickymaze:lurker_wither_skeleton",
+      "trickymaze:depths_lurker",
     );
   });
-  it("returns the skeleton sentry archer for old_prison and stray for depths", () => {
+  it("returns sentry archers per theme", () => {
     expect(resolveEntityId("sentry_archer", "old_prison")).toBe(
-      "trickymaze:sentry_archer_skeleton",
+      "trickymaze:old_prison_sentry",
     );
     expect(resolveEntityId("sentry_archer", "depths")).toBe(
-      "trickymaze:sentry_archer_stray",
+      "trickymaze:depths_sentry",
     );
   });
   it("throws for unpopulated theme combos", () => {

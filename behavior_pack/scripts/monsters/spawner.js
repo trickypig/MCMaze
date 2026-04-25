@@ -43,9 +43,8 @@ export function spawnFromManifest(dim, anchor, manifest, floor) {
             entity.setDynamicProperty("trickymaze:damage_mult", dmgMul);
             const health = entity.getComponent("minecraft:health");
             if (health) {
-                const scaledMax = Math.round(20 * hpMul);
-                // setCurrentValue clamps to effectiveMax, so set through setBaseEffectForId.
-                health.setCurrentValue(scaledMax);
+                const target = Math.min(Math.round(20 * hpMul), health.effectiveMax);
+                health.setCurrentValue(target);
             }
         }
         catch (e) {

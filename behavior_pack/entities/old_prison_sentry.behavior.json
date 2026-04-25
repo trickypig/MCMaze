@@ -2,7 +2,7 @@
   "format_version": "1.21.0",
   "minecraft:entity": {
     "description": {
-      "identifier": "trickymaze:sentry_archer_skeleton",
+      "identifier": "trickymaze:old_prison_sentry",
       "is_spawnable": false,
       "is_summonable": true,
       "is_experimental": false

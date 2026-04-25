@@ -2,12 +2,12 @@
   "format_version": "1.10.0",
   "minecraft:client_entity": {
     "description": {
-      "identifier": "trickymaze:lurker_wither_skeleton",
+      "identifier": "trickymaze:depths_sentry",
       "materials": { "default": "skeleton" },
-      "textures": { "default": "textures/entity/skeleton/wither_skeleton" },
+      "textures": { "default": "textures/entity/skeleton/stray" },
       "geometry": { "default": "geometry.skeleton" },
       "render_controllers": ["controller.render.skeleton"],
-      "spawn_egg": { "base_color": "#0d0d0d", "overlay_color": "#3b1f57" }
+      "spawn_egg": { "base_color": "#5e7e84", "overlay_color": "#aabcbf" }
     }
   }
 }

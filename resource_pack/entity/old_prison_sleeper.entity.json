@@ -2,12 +2,12 @@
   "format_version": "1.10.0",
   "minecraft:client_entity": {
     "description": {
-      "identifier": "trickymaze:patroller_zombie",
+      "identifier": "trickymaze:old_prison_sleeper",
       "materials": { "default": "zombie" },
-      "textures": { "default": "textures/entity/zombie/zombie" },
+      "textures": { "default": "textures/entity/zombie_villager/zombie_villager" },
       "geometry": { "default": "geometry.zombie" },
       "render_controllers": ["controller.render.zombie"],
-      "spawn_egg": { "base_color": "#0000ff", "overlay_color": "#800080" }
+      "spawn_egg": { "base_color": "#563012", "overlay_color": "#799c65" }
     }
   }
 }

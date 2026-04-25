@@ -1,18 +1,18 @@
 const IDENTIFIER_TABLE = {
     patroller: {
-        old_prison: "trickymaze:patroller_zombie",
-        depths: "trickymaze:patroller_wither_skeleton",
+        old_prison: "trickymaze:old_prison_patroller",
+        depths: "trickymaze:depths_patroller",
     },
     sleeper: {
-        old_prison: "trickymaze:sleeper_zombie_villager",
-        depths: "trickymaze:sleeper_wither_skeleton",
+        old_prison: "trickymaze:old_prison_sleeper",
+        depths: "trickymaze:depths_sleeper",
     },
     lurker: {
-        depths: "trickymaze:lurker_wither_skeleton",
+        depths: "trickymaze:depths_lurker",
     },
     sentry_archer: {
-        old_prison: "trickymaze:sentry_archer_skeleton",
-        depths: "trickymaze:sentry_archer_stray",
+        old_prison: "trickymaze:old_prison_sentry",
+        depths: "trickymaze:depths_sentry",
     },
 };
 export function resolveEntityId(behavior, theme) {

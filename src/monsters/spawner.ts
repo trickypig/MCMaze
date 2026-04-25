@@ -55,9 +55,8 @@ export function spawnFromManifest(
 
       const health = entity.getComponent("minecraft:health");
       if (health) {
-        const scaledMax = Math.round(20 * hpMul);
-        // setCurrentValue clamps to effectiveMax, so set through setBaseEffectForId.
-        health.setCurrentValue(scaledMax);
+        const target = Math.min(Math.round(20 * hpMul), health.effectiveMax);
+        health.setCurrentValue(target);
       }
     } catch (e) {
       console.warn(`[TrickyMaze] spawn config failed on ${identifier}: ${String(e)}`);

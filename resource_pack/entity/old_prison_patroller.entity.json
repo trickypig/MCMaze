@@ -1,0 +1,13 @@
+{
+  "format_version": "1.10.0",
+  "minecraft:client_entity": {
+    "description": {
+      "identifier": "trickymaze:old_prison_patroller",
+      "materials": { "default": "zombie" },
+      "textures": { "default": "textures/entity/zombie/zombie" },
+      "geometry": { "default": "geometry.zombie" },
+      "render_controllers": ["controller.render.zombie"],
+      "spawn_egg": { "base_color": "#0000ff", "overlay_color": "#800080" }
+    }
+  }
+}

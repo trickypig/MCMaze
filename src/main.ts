@@ -149,7 +149,7 @@ function runSmokeMonsters(): void {
   const pos = { x: origin.x + 2, y: origin.y, z: origin.z };
   let e;
   try {
-    e = dim.spawnEntity("trickymaze:patroller_zombie", pos);
+    e = dim.spawnEntity("trickymaze:old_prison_patroller", pos);
   } catch (err) {
     console.warn(`[TrickyMaze] smoke: spawnEntity failed: ${String(err)}`);
     return;
