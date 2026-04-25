@@ -5,7 +5,7 @@
       "identifier": "trickymaze:patroller_zombie",
       "materials": { "default": "zombie" },
       "textures": { "default": "textures/entity/zombie/zombie" },
-      "geometry": { "default": "geometry.humanoid" },
+      "geometry": { "default": "geometry.zombie" },
       "render_controllers": ["controller.render.zombie"],
       "spawn_egg": { "base_color": "#0000ff", "overlay_color": "#800080" }
     }
