@@ -5,7 +5,7 @@ import { buildFloor } from "../generation/floor";
 import { generateMaze } from "../generation/maze";
 import { applyOps } from "../generation/world_writer";
 import { buildSpawnManifest } from "../generation/spawn_plan";
-import { spawnFromManifest } from "../monsters/spawner";
+import { spawnFromManifest, despawnAllMonsters } from "../monsters/spawner";
 import { commitState } from "../main";
 import { worldSeededRng } from "../generation/rng";
 import { themeForFloor } from "../generation/themes";
@@ -114,6 +114,11 @@ export function buildAndEnterFloor(state: RunState, floorNum: number): void {
   });
 
   commitState();
+
+  // Despawn any monsters left over from the previous floor — sealed off
+  // below us, but still counted by the HUD's family-wide scan.
+  const removed = despawnAllMonsters(dim);
+  if (removed > 0) console.warn(`[TrickyMaze] Despawned ${removed} stale monsters from prior floor.`);
 
   // Spawn monsters after block + fixture placement completes.
   const manifest = buildSpawnManifest(maze, floorNum, worldSeededRng(floorNum + 1_000_000));
